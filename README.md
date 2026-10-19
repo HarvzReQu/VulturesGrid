@@ -21,7 +21,21 @@ It is a visual game only. There is no real networking, scanning or security tool
 
 ## Features
 
-- **The Carcass:** an HQ data center (core router, firewall, web, domain, file and database servers) ringed by six branch offices. Each node type has its own low-poly shape: tall monoliths for servers, flat panels for workstations, spinning octahedrons for routers and jagged bone walls for firewalls.
+- **The Carcass:** an HQ data center (core router, firewall, web, domain, file and database servers) ringed by six branch offices. Every role has its own low-poly silhouette and a status light that follows its state:
+  - **Database:** stacked disks with glowing bands.
+  - **Domain controller:** a crowned monolith with a keyhole slit.
+  - **Web server:** a rack with vent lights and a dish.
+  - **File server:** a cabinet of glowing drawer handles.
+  - **Core router:** an octahedron inside a halo. **Branch routers** carry antennas.
+  - **Firewalls:** jagged bone walls with buttresses and a scan line.
+  - **Workstations:** monitors with glowing screens and keyboards.
+
+  Branch names and HQ role tags are printed faintly on the ground.
+- **Pinpoints:** pins mark the nodes that matter right now, and clicking one flies you there.
+  - An amber **!** marks Scented nodes and a crimson **!** marks Rotting ones.
+  - A spinning crosshair marks where the rot is heading next, and **⇪** marks a node leaking data.
+  - Pins for off-screen nodes stick to the screen edge with an arrow.
+  - Hovering any node shows its name, IP and state.
 - **Four Hunts** (or Random), each a different spreading pattern. Every round is rebuilt when it starts: The Lure and The Rot begin at a random branch, The Lure aims at a random HQ server, The Rot circles in a random direction, and the lateral targets in The Siege and The Bleed shift between rounds.
   - **The Lure** hops node by node from a branch workstation to the HQ domain controller.
   - **The Rot** leaps from branch to branch around the ring.
@@ -98,7 +112,8 @@ Import the repository in Vercel. It detects Vite automatically: the build comman
 src/
   main.js            wires everything together and runs the frame loop
   style.css
-  scene/             Three.js: stage, fog, nodes, links, pulses, vultures, trace, camera swoop, picking
+  scene/             Three.js: stage, fog, nodes and their role shapes, links, pulses, vultures,
+                     trace, ground labels, camera swoop, picking
   sim/               game logic, no rendering
     topology.js      the map: nodes, layout, links
     hunts.js         Hunt definitions (data-only timelines)
@@ -106,8 +121,8 @@ src/
     replay.js        records a round for the timeline scrubber
     scoring.js       grades a round and builds the Case File
     states.js        state names and meanings
-  ui/                DOM panels: kill chain, Hunt panel, dossier, The Watch, timeline,
-                     Case File, help modal, loading screen, logo
+  ui/                DOM panels: kill chain, Hunt panel, dossier, The Watch, timeline, Case File,
+                     threat pinpoints, tutorial, help modal, loading screen, logo
   assets/
     skull.svg        the vulture skull emblem
 ```

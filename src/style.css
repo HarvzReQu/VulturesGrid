@@ -316,6 +316,7 @@ select,
 
 @media (prefers-reduced-motion: reduce) {
   .btn-primary.is-nudging,
+  .beacon-icon,
   .tut-marker,
   .tut-focus,
   .logo.is-threat,
@@ -1401,6 +1402,195 @@ dialog::backdrop {
   background: var(--ink);
   color: var(--paper);
   font-weight: 700;
+}
+
+/* Threat pinpoints over nodes (and on the screen edge when off-screen) */
+.beacons {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.is-training .beacons {
+  display: none;
+}
+
+.beacon {
+  --c: #e0392b;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  margin: -13px 0 0 -13px; /* center the 26px icon on the point */
+  background: none;
+  border: 0;
+  pointer-events: auto;
+  cursor: pointer;
+  will-change: transform;
+}
+
+.beacon[data-kind='scented'] {
+  --c: var(--amber);
+}
+
+.beacon.is-right {
+  flex-direction: row-reverse;
+}
+
+.beacon.is-right .beacon-arrow {
+  left: auto;
+  right: 13px;
+}
+
+.beacon-icon {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 2px solid var(--c);
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg); /* map-pin teardrop pointing down at the node */
+  background: rgba(11, 11, 12, 0.85);
+  color: var(--c);
+  font-family: var(--serif);
+  font-size: 17px;
+  font-weight: 700;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--c) 60%, transparent);
+}
+
+/* Keep the glyph upright inside the rotated pin */
+.beacon-glyph {
+  line-height: 1;
+  transform: rotate(45deg);
+}
+
+.beacon.is-edge .beacon-glyph,
+.beacon[data-kind='incoming'] .beacon-glyph {
+  transform: none;
+}
+
+.beacon[data-kind='rotting'] .beacon-icon {
+  background: var(--c);
+  color: var(--void);
+  animation: beacon-throb 1s ease-in-out infinite;
+}
+
+.beacon[data-kind='incoming'] .beacon-icon {
+  border-radius: 50%;
+  border-style: dashed;
+  animation: beacon-spin 3s linear infinite;
+}
+
+.beacon[data-kind='leak'] .beacon-icon {
+  border-radius: 4px;
+}
+
+@keyframes beacon-throb {
+  50% {
+    box-shadow: 0 0 2px transparent;
+  }
+}
+
+@keyframes beacon-spin {
+  to {
+    transform: rotate(315deg);
+  }
+}
+
+.beacon-label {
+  display: none;
+  padding: 2px 6px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  white-space: nowrap;
+  color: var(--bone);
+  background: rgba(11, 11, 12, 0.88);
+  border: 1px solid color-mix(in srgb, var(--c) 70%, transparent);
+}
+
+/* Labels show for the urgent kinds, on hover, and on edge pins (where context matters) */
+.beacon[data-kind='incoming'] .beacon-label,
+.beacon[data-kind='leak'] .beacon-label,
+.beacon:hover .beacon-label,
+.beacon.is-edge .beacon-label {
+  display: block;
+}
+
+.beacon-arrow {
+  display: none;
+  position: absolute;
+  left: 13px;
+  top: 13px;
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+}
+
+.beacon-arrow::before {
+  content: '';
+  position: absolute;
+  left: 17px;
+  top: -6px;
+  border: 6px solid transparent;
+  border-left: 9px solid var(--c);
+}
+
+.beacon.is-edge .beacon-arrow {
+  display: block;
+}
+
+.beacon.is-edge .beacon-icon {
+  border-radius: 50%;
+  transform: none;
+}
+
+/* Hover tooltip for any node */
+.hover-tip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 7;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 7px 10px;
+  background: rgba(14, 14, 15, 0.94);
+  border: 1px solid rgba(232, 226, 212, 0.25);
+  pointer-events: none;
+}
+
+.hover-tip[hidden] {
+  display: none;
+}
+
+.hover-tip b {
+  font-size: 15px;
+}
+
+.hover-tip span,
+.hover-tip em {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-style: normal;
+  color: var(--bone-dim);
+}
+
+.hover-tip em {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--state);
+}
+
+.hover-tip em i {
+  width: 7px;
+  height: 7px;
+  background: var(--state);
+  transform: rotate(45deg);
 }
 
 /* Tutorial */

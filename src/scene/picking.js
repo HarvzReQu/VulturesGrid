@@ -3,8 +3,9 @@ import * as THREE from 'three';
 const CLICK_TOLERANCE = 6; // px; anything more is treated as an orbit drag
 
 // Click-to-select on node meshes, ignoring clicks that were really drags.
-// Double-click calls onSwoop with the node under the pointer.
-export function createPicker({ camera, renderer }, nodes, onPick, onSwoop) {
+// Double-click calls onSwoop with the node under the pointer; onHover(id | null, x, y)
+// follows the mouse for tooltips.
+export function createPicker({ camera, renderer }, nodes, onPick, onSwoop, onHover = () => {}) {
   const el = renderer.domElement;
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
@@ -37,7 +38,10 @@ export function createPicker({ camera, renderer }, nodes, onPick, onSwoop) {
   });
 
   el.addEventListener('pointermove', (e) => {
-    if (e.pointerType !== 'mouse' || e.buttons) return;
-    el.style.cursor = hitTest(e) ? 'pointer' : '';
+    if (e.pointerType !== 'mouse' || e.buttons) return onHover(null);
+    const id = hitTest(e);
+    el.style.cursor = id ? 'pointer' : '';
+    onHover(id, e.clientX, e.clientY);
   });
+  el.addEventListener('pointerleave', () => onHover(null));
 }

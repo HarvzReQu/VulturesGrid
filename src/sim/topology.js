@@ -42,6 +42,7 @@ export function buildTopology(seed = 7) {
   const addNode = (node) => {
     node.facing ??= 0;
     node.os ??= OS[node.type];
+    node.role ??= node.type; // drives the 3D shape: web, db, dc, files, core, router, firewall, workstation
     nodes.push(node);
     byId.set(node.id, node);
     return node;
@@ -59,6 +60,7 @@ export function buildTopology(seed = 7) {
     type: 'router',
     label: 'Core Router',
     hostname: 'hq-core-rtr01',
+    role: 'core',
     ip: '10.0.0.1',
     os: OS.router,
     position: [0, 0, 0],
@@ -75,6 +77,7 @@ export function buildTopology(seed = 7) {
       label: spec.label,
       hostname: spec.hostname,
       os: spec.os,
+      role: spec.key === 'fw' ? 'firewall' : spec.key,
       ip: `10.0.0.${10 + i}`,
       position: [Math.cos(angle) * 6.5, 0, Math.sin(angle) * 6.5],
     });

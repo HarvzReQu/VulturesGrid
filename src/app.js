@@ -25,6 +25,9 @@ import { mountLogo } from './ui/logo.js';
 import { createSoundToggle } from './ui/soundToggle.js';
 import { createAmbience } from './audio/ambience.js';
 import { createTutorial } from './ui/tutorial.js';
+import { createBeacons } from './ui/beacons.js';
+import { createGroundLabels } from './scene/labels.js';
+import { STATES } from './sim/states.js';
 
 const REPORT_DELAY_MS = 1600; // let the final state sink in before the Case File lands
 
@@ -41,6 +44,7 @@ export function startApp(params) {
   const traceView = createTraceView(stage.scene, links);
   const swoop = createSwoop(stage);
   const engine = createEngine(topology);
+  createGroundLabels(stage.scene, topology);
   const replay = createReplay(topology.nodes.map((n) => n.id));
 
   const logo = mountLogo();
@@ -66,6 +70,7 @@ export function startApp(params) {
   }
 
   function playVisual(e) {
+    beacons.onVisual(e);
     if (e.type === 'state') showState(e.id, e.state);
     else if (e.type === 'spread') pulses.send(e.path, e.hop);
     else if (e.type === 'stream-start') pulses.startStream(e.id, e.path, e.rate);
@@ -80,7 +85,11 @@ export function startApp(params) {
     pulses.clear();
     traceView.clear();
     for (const [id, state] of replay.statesAt(replay.playhead)) showState(id, state);
-    for (const s of replay.streamsAt(replay.playhead)) pulses.startStream(s.id, s.path, s.rate);
+    beacons.clear();
+    for (const s of replay.streamsAt(replay.playhead)) {
+      pulses.startStream(s.id, s.path, s.rate);
+      beacons.onVisual(s);
+    }
     watch.setCutoff(replay.playhead);
     dossier.render();
   }
@@ -187,6 +196,7 @@ export function startApp(params) {
         clearTimeout(reportTimer);
         pulses.clear();
         traceView.clear();
+        beacons.clear();
         watch.clear();
         for (const id of nodes.byId.keys()) nodes.setRestoring(id, false);
         if (dossier.nodeId) dossier.render();
@@ -227,10 +237,35 @@ export function startApp(params) {
   });
   document.getElementById('tutorial-open').addEventListener('click', () => tutorial.start());
 
-  createPicker(stage, nodes, select, (id) => {
+  // ---- Pinpoints and hover tooltip -------------------------------------------------
+
+  const flyToNode = (id) => {
     select(id);
     swoop.flyTo(nodes.byId.get(id).port);
+  };
+  const beacons = createBeacons({
+    stage,
+    nodes,
+    topology,
+    outsideId: topology.outside.id,
+    now: () => simTime,
+    onPick: flyToNode,
   });
+
+  const tip = document.getElementById('hover-tip');
+  function hover(id, x, y) {
+    if (!id) {
+      tip.hidden = true;
+      return;
+    }
+    const node = topology.byId.get(id);
+    const state = nodes.byId.get(id).state;
+    tip.innerHTML = `<b>${node.label}</b><span>${node.hostname} · ${node.ip}</span><em data-state="${state}"><i></i>${STATES[state].name} · ${STATES[state].plain}</em>`;
+    tip.style.transform = `translate(${x + 16}px, ${y + 14}px)`;
+    tip.hidden = false;
+  }
+
+  createPicker(stage, nodes, select, flyToNode, hover);
 
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') select(null);
@@ -287,6 +322,7 @@ export function startApp(params) {
     logo.setThreat(rotting > 0);
     ambience.setThreat(rotting);
     dossier.tick();
+    beacons.update();
     tutorial.update();
     if (stage.controls.enabled) stage.controls.update();
     stage.render();

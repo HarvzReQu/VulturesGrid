@@ -2,8 +2,6 @@ import * as THREE from 'three';
 import { TRAINING } from '../sim/hunts.js';
 
 const FIRST = 'ashford-ws1';
-// How high above the ground each node shape reaches; the arrow sits just above it.
-const TOP = { server: 3.4, workstation: 1.5, router: 2.3, firewall: 2.4 };
 const WEB = 'hq-web';
 
 // The guided Training Hunt. Each lesson can hold the Hunt timeline, point at a node,
@@ -180,7 +178,7 @@ export function createTutorial(app) {
       marker.hidden = true;
       return;
     }
-    v.copy(entry.port).setY(TOP[entry.data.type] + 0.3).project(app.stage.camera);
+    v.copy(entry.port).setY(entry.top + 0.3).project(app.stage.camera);
     const onScreen = v.z < 1 && Math.abs(v.x) < 1.1 && Math.abs(v.y) < 1.1;
     marker.hidden = !onScreen;
     if (!onScreen) return;
