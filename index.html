@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VulturesGrid</title>
+    <meta name="description" content="VulturesGrid: a 3D network visualization game by The Vultures." />
+    <meta name="theme-color" content="#0b0b0c" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="loading" class="loading" aria-live="polite">
+      <div class="loading-skull"></div>
+      <p class="loading-word">VULTURESGRID</p>
+      <p class="loading-tagline" aria-label="We circle what is already rotten."></p>
+      <p class="loading-skip">Click to skip</p>
+    </div>
+
+    <div id="app"></div>
+
+    <header class="hud hud-top">
+      <span class="logo" id="logo"></span>
+      <div class="brand">
+        <h1 class="wordmark">VULTURESGRID</h1>
+        <p class="tagline">We circle what is already rotten.</p>
+      </div>
+      <button class="help-open" id="help-open" aria-label="How to Hunt">?</button>
+      <button class="sound-toggle" id="sound-toggle" aria-pressed="false" aria-label="Play ambient sound">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" />
+          <g class="sound-waves"><path d="M15.5 9a4 4 0 0 1 0 6" /><path d="M18 6.5a7.5 7.5 0 0 1 0 11" /></g>
+          <g class="sound-mute"><path d="M16 9.5l5 5M21 9.5l-5 5" /></g>
+        </svg>
+      </button>
+    </header>
+
+    <nav class="killchain" id="killchain" aria-label="Kill chain progress"></nav>
+
+    <aside class="dossier panel" id="dossier" aria-label="Node dossier" hidden>
+      <div class="dossier-tab">Dossier</div>
+      <button class="dossier-close" aria-label="Close dossier">×</button>
+      <div class="dossier-body"></div>
+    </aside>
+
+    <aside class="sidebar">
+      <section class="panel hunt-panel" aria-label="Hunt controls">
+        <label class="panel-title" for="hunt-select">Hunt</label>
+        <div class="hunt-row">
+          <select id="hunt-select"></select>
+          <button id="hunt-begin" class="btn btn-primary">Begin</button>
+          <button id="hunt-reset" class="btn">Reset</button>
+        </div>
+        <p class="hunt-blurb" id="hunt-blurb"></p>
+        <p class="hunt-status" id="hunt-status"></p>
+      </section>
+
+      <section class="panel watch" id="watch" aria-label="The Watch event log">
+        <button class="watch-toggle panel-title">
+          The Watch <span class="watch-count"></span>
+        </button>
+        <div class="watch-tools">
+          <input class="watch-search" type="search" placeholder="Search events" aria-label="Search events" />
+          <div class="watch-chips" role="group" aria-label="Filter by severity">
+            <button data-level="ALL" aria-pressed="true">All</button>
+            <button data-level="INFO" aria-pressed="false">Info</button>
+            <button data-level="WARN" aria-pressed="false">Warn</button>
+            <button data-level="CRIT" aria-pressed="false">Crit</button>
+          </div>
+        </div>
+        <ol class="watch-list" aria-live="polite"></ol>
+      </section>
+
+      <ul class="legend panel" aria-label="Node states">
+        <li data-state="alive"><i></i>Alive <em>Healthy</em></li>
+        <li data-state="scented"><i></i>Scented <em>Suspicious</em></li>
+        <li data-state="rotting"><i></i>Rotting <em>Compromised</em></li>
+        <li data-state="picked"><i></i>Picked Clean <em>Quarantined</em></li>
+        <li data-state="revived"><i></i>Revived <em>Restored</em></li>
+      </ul>
+    </aside>
+
+    <div class="transport" id="transport" role="group" aria-label="Simulation speed">
+      <button data-pause aria-label="Pause">❚❚</button>
+      <button data-speed="0.5">0.5×</button>
+      <button data-speed="1">1×</button>
+      <button data-speed="2">2×</button>
+    </div>
+
+    <div class="timeline" id="timeline" role="group" aria-label="Round replay" hidden>
+      <button data-play aria-label="Play replay">▶</button>
+      <input type="range" min="0" max="1" step="0.05" value="0" aria-label="Replay position" />
+      <span class="tl-time"></span>
+      <button data-exit hidden>Live</button>
+    </div>
+
+    <footer class="site-footer">VulturesGrid by The Vultures. Educational game, all activity simulated.</footer>
+
+    <dialog class="casefile" id="casefile" aria-labelledby="cf-title">
+      <article class="cf-body"></article>
+    </dialog>
+
+    <dialog class="help" id="help" aria-labelledby="help-title">
+      <button class="help-close" data-close aria-label="Close">×</button>
+      <h2 id="help-title">How to Hunt</h2>
+      <p class="help-lede">
+        You are a Vulture. Something in this network is going bad. Spot the decay early and contain it before it
+        spreads. Everything here is a simulation: shapes, particles and made-up names.
+      </p>
+
+      <h3>The round</h3>
+      <ol>
+        <li>Pick a <strong>Hunt</strong> (top right) and press <strong>Begin</strong>.</li>
+        <li>Watch the map and <strong>The Watch</strong> log for amber and crimson.</li>
+        <li>Click a node to open its <strong>dossier</strong>, then act.</li>
+        <li>When the Hunt ends you get a stamped <strong>Case File</strong> with a grade, and can replay the round.</li>
+      </ol>
+
+      <h3>Node states</h3>
+      <ul class="help-states">
+        <li data-state="alive"><i></i><b>Alive</b> Healthy</li>
+        <li data-state="scented"><i></i><b>Scented</b> Suspicious: amber pulse</li>
+        <li data-state="rotting"><i></i><b>Rotting</b> Compromised: crimson, cracks, vultures circling</li>
+        <li data-state="picked"><i></i><b>Picked Clean</b> Quarantined: ash gray in a cage</li>
+        <li data-state="revived"><i></i><b>Revived</b> Restored: white flash</li>
+      </ul>
+
+      <h3>Actions</h3>
+      <dl class="help-actions">
+        <dt>Isolate</dt><dd>Quarantine a node. Nothing passes through it. Press again to release.</dd>
+        <dt>Block</dt><dd>Blocklist the outside source. Its traffic bounces off the firewall.</dd>
+        <dt>Restore</dt><dd>Revive a Rotting node after 5 seconds.</dd>
+        <dt>Trace</dt><dd>Draw the path the rot took to reach this node.</dd>
+      </dl>
+      <p class="help-note">Each action has a cooldown, so choose well. Quarantined nodes cost a little at grading.</p>
+
+      <h3>Controls</h3>
+      <dl class="help-actions">
+        <dt>Mouse</dt><dd>Drag to orbit, right-drag to pan, scroll to zoom.</dd>
+        <dt>Touch</dt><dd>One finger to orbit, two to zoom and pan.</dd>
+        <dt>Double-click</dt><dd>Swoop down onto a node.</dd>
+        <dt>Space / Esc</dt><dd>Pause / close the dossier.</dd>
+        <dt>M</dt><dd>Ambient sound on or off: wind and distant wings (off by default).</dd>
+      </dl>
+
+      <button class="btn btn-primary help-go" data-close>Begin the watch</button>
+      <p class="help-foot">VulturesGrid by The Vultures. Educational game, all activity simulated.</p>
+    </dialog>
+
+    <p class="hud hud-hint">Drag orbit · Right-drag pan · Scroll zoom · Click select · Double-click swoop · Space pause · M sound</p>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
