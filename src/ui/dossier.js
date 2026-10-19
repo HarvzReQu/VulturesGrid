@@ -1,11 +1,10 @@
-import { COOLDOWNS } from '../sim/engine.js';
 import { STATES } from '../sim/states.js';
 import { clockLabel, escapeHtml } from './format.js';
 
 const ACTIONS = [
   { id: 'isolate', name: 'Isolate', sub: 'Quarantine; cut its links' },
   { id: 'block', name: 'Block', sub: 'Blocklist the outside source' },
-  { id: 'restore', name: 'Restore', sub: 'Revive a Rotting node (5s)' },
+  { id: 'restore', name: 'Restore', sub: 'Revive a Rotting node' },
   { id: 'trace', name: 'Trace', sub: 'Show the path the rot took' },
 ];
 
@@ -106,7 +105,7 @@ export function createDossier({ engine, topology, viewState, isLocked, isAllowed
       button.disabled = !available;
       button.querySelector('.act-name').textContent = name;
       button.querySelector('.act-cd').textContent = cooling ? `${remaining.toFixed(1)}s` : '';
-      button.style.setProperty('--cd', cooling ? remaining / COOLDOWNS[a.id] : 0);
+      button.style.setProperty('--cd', cooling ? remaining / engine.cooldownLength(a.id) : 0);
     }
 
     const progress = engine.restoreProgress(nodeId);

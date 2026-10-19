@@ -1,6 +1,8 @@
 // Pure data description of the map: nodes, their layout, and the lines between them.
 // Hostnames and IPs are made up and only used as labels.
 
+import { mulberry32 } from './random.js';
+
 const TAU = Math.PI * 2;
 export const BRANCH_RADIUS = 26;
 
@@ -22,19 +24,8 @@ const HQ_RING = [
 // Fictional OS labels for the dossier.
 const OS = { router: 'Carrion RouterOS 7.1', firewall: 'Bonewall FW 4.2', workstation: 'Windows 11 23H2' };
 
-// Small deterministic PRNG so the map is identical on every load.
-function mulberry32(seed) {
-  return () => {
-    seed |= 0;
-    seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
 export function buildTopology(seed = 7) {
-  const rand = mulberry32(seed);
+  const rand = mulberry32(seed); // fixed seed: the map is identical on every load
   const nodes = [];
   const links = [];
   const byId = new Map();

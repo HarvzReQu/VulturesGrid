@@ -1,8 +1,8 @@
 import { OUTSIDE_ID } from './topology.js';
 import { STAGES } from './hunts.js';
 
-const DEFAULT_HOP = 1.0; // seconds per link for a spread pulse
-const DEFAULT_DWELL = 1.5; // seconds a node stays Scented before Rotting
+export const DEFAULT_HOP = 1.0; // seconds per link for a spread pulse
+export const DEFAULT_DWELL = 1.5; // seconds a node stays Scented before Rotting
 const REVIVE_TIME = 1.4; // seconds a node shows Revived before returning to Alive
 export const RESTORE_TIME = 5;
 export const COOLDOWNS = { isolate: 6, block: 20, restore: 10, trace: 4 };
@@ -49,6 +49,9 @@ export function createEngine(topology) {
   let dataLostMB = 0;
   let blocked = false;
   let outsideIp = '';
+  // Set per round by difficulty (see difficulty.js).
+  let cooldownScale = 1;
+  let restoreTime = RESTORE_TIME;
   let holdAt = null; // tutorial: Hunt time at which the timeline waits (timers keep running)
 
   // Round stats for the Case File.
@@ -268,9 +271,11 @@ export function createEngine(topology) {
     emit({ type: 'action', action, id });
   }
 
+  const cooldownLength = (action) => COOLDOWNS[action] * cooldownScale;
+
   function spend(action) {
     if (cooldown(action) > 0) return false;
-    readyAt[action] = clock + COOLDOWNS[action];
+    readyAt[action] = clock + cooldownLength(action);
     return true;
   }
 
@@ -306,11 +311,11 @@ export function createEngine(topology) {
 
   function restore(id) {
     if (!wasRotting(id) || restoring.has(id) || !spend('restore')) return false;
-    restoring.set(id, clock + RESTORE_TIME);
-    record('INFO', `Restore started on ${host(id)} (${RESTORE_TIME}s)`, id);
+    restoring.set(id, clock + restoreTime);
+    record('INFO', `Restore started on ${host(id)} (${restoreTime}s)`, id);
     emit({ type: 'restore-start', id });
     act('restore', id);
-    schedule(RESTORE_TIME, () => {
+    schedule(restoreTime, () => {
       restoring.delete(id);
       emit({ type: 'restore-end', id });
       if (!wasRotting(id)) return;
@@ -373,7 +378,10 @@ export function createEngine(topology) {
     reset();
     hunt = def;
     stageStarts = STAGES.map((_, i) => def.steps.find((s) => s.stage === i)?.at ?? def.duration);
-    outsideIp = `203.0.113.${20 + Math.floor(Math.random() * 200)}`; // documentation range, never routable
+    // Documentation range, never routable. The Daily Hunt brings its own so everyone sees the same one.
+    outsideIp = def.outsideIp ?? `203.0.113.${20 + Math.floor(Math.random() * 200)}`;
+    cooldownScale = def.cooldownScale ?? 1;
+    restoreTime = def.restoreTime ?? RESTORE_TIME;
     running = true;
     emit({ type: 'start', hunt });
     record('INFO', `Hunt begins: ${def.name}`);
@@ -430,7 +438,8 @@ export function createEngine(topology) {
     stateOf: (id) => state.get(id),
     canRestore: (id) => wasRotting(id) && !restoring.has(id),
     canTrace: (id) => cause.has(id),
-    restoreProgress: (id) => (restoring.has(id) ? 1 - (restoring.get(id) - clock) / RESTORE_TIME : null),
+    restoreProgress: (id) => (restoring.has(id) ? 1 - (restoring.get(id) - clock) / restoreTime : null),
+    cooldownLength,
     get hunt() {
       return hunt;
     },

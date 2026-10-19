@@ -13,6 +13,8 @@ import { createEngine } from './sim/engine.js';
 import { HUNTS, STAGES, pickHunt } from './sim/hunts.js';
 import { createReplay } from './sim/replay.js';
 import { buildReport } from './sim/scoring.js';
+import { applyDifficulty } from './sim/difficulty.js';
+import { dailyRound, saveDailyBest } from './sim/daily.js';
 import { createKillChain } from './ui/killchain.js';
 import { createHuntPanel } from './ui/huntPanel.js';
 import { createDossier } from './ui/dossier.js';
@@ -53,9 +55,13 @@ export function startApp(params) {
   const help = createHelp({ onTutorial: () => tutorial.start() });
   const killChain = createKillChain(document.getElementById('killchain'), STAGES);
   const transport = createTransport();
+  // A playable round for a dropdown choice. The Daily Hunt ignores the difficulty choice.
+  const roundFor = (id, difficulty) =>
+    id === 'daily' ? applyDifficulty(dailyRound()) : applyDifficulty(pickHunt(id), difficulty);
+
   const huntPanel = createHuntPanel({
     hunts: HUNTS,
-    onBegin: (id) => engine.start(pickHunt(id)),
+    onBegin: (id, difficulty) => engine.start(roundFor(id, difficulty)),
     onReset: () => engine.reset(),
   });
 
@@ -205,6 +211,10 @@ export function startApp(params) {
         replay.finish(engine.time);
         timeline.show(replay.duration);
         const report = buildReport(engine.summary(), topology);
+        if (report.daily) {
+          saveDailyBest(report.daily.key, { grade: report.grade, score: report.score });
+          huntPanel.refresh();
+        }
         const note = tutorial.active
         ? 'Training complete. You are ready: pick a Hunt at the top right and press Begin.'
         : null;
@@ -229,6 +239,7 @@ export function startApp(params) {
     setTraining(on) {
       document.body.classList.toggle('is-training', on);
       for (const id of ['hunt-begin', 'hunt-reset', 'hunt-select']) document.getElementById(id).disabled = on;
+      huntPanel.refresh(); // difficulty buttons follow the lock
     },
     onFinish(completed) {
       beginBtn.classList.add('is-nudging');
@@ -303,9 +314,10 @@ export function startApp(params) {
   // &focus=hq-db frames a node; handy for screenshots).
   if (params.has('hunt')) {
     huntPanel.setValue(params.get('hunt'));
-    engine.start(pickHunt(params.get('hunt')));
+    engine.start(roundFor(params.get('hunt'), params.get('level') ?? undefined));
     for (let s = Number(params.get('skip')) || 0; s > 0; s -= 0.05) tick(0.05, 1);
   }
+  if (params.has('daily')) huntPanel.setValue('daily');
   const focus = nodes.byId.get(params.get('focus'));
   if (focus) {
     stage.controls.target.copy(focus.port);

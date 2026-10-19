@@ -5,8 +5,8 @@ function shareText(r) {
   const lost = r.stats.find(([k]) => k === 'Nodes lost')[1];
   const data = r.stats.find(([k]) => k === 'Data lost')[1];
   const lines = [
-    `VulturesGrid · ${r.huntName}`,
-    `Grade ${r.grade} (${r.score}/100) · ${r.outcome}`,
+    `VulturesGrid · ${r.daily ? `Daily Hunt #${r.daily.number} (${r.huntName.split(' · ')[1]})` : r.huntName}`,
+    `Grade ${r.grade} (${r.score}/100) · ${r.outcome} · ${r.difficulty}`,
     `Analyst profile: ${r.profile.title}. "${r.profile.epithet}"`,
     `Nodes lost: ${lost} · Data lost: ${data}`,
   ];
@@ -39,7 +39,8 @@ export function createCaseFile({ onReplay, onNewHunt }) {
 
   // Native share sheet where available (phones), otherwise copy to the clipboard.
   async function share(button) {
-    const url = `${location.origin}${location.pathname}`;
+    // A Daily result links to the Daily Hunt, so friends play the exact same round.
+    const url = `${location.origin}${location.pathname}${report.daily ? '?daily' : ''}`;
     const text = shareText(report);
     const original = button.textContent;
     try {
@@ -83,6 +84,7 @@ export function createCaseFile({ onReplay, onNewHunt }) {
         <dl class="cf-meta">
           <dt>Case No.</dt><dd>${r.caseNumber}</dd>
           <dt>Hunt</dt><dd>${escapeHtml(r.huntName)}</dd>
+          <dt>Difficulty</dt><dd>${escapeHtml(r.difficulty)}</dd>
           <dt>First rot</dt><dd>${escapeHtml(r.origin)}</dd>
           <dt>Closed</dt><dd>${escapeHtml(r.date)}</dd>
           ${r.outsideIp ? `<dt>Outside source</dt><dd>${escapeHtml(r.outsideIp)}</dd>` : ''}

@@ -1,4 +1,6 @@
 import { OUTSIDE_ID } from './topology.js';
+import { seededRandom } from './random.js';
+import { DIFFICULTIES } from './difficulty.js';
 
 // Turns an engine summary into a graded Case File report. Every report is shaped by how
 // the round was actually played: an analyst profile, marks earned, and a summary written
@@ -44,17 +46,6 @@ const clock = (s) => {
   const t = Math.max(0, Math.floor(s));
   return `T+${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
 };
-
-// Small deterministic PRNG seeded from the case number, so a report's wording is stable.
-function seeded(text) {
-  let h = 2166136261;
-  for (const c of text) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
-  return () => {
-    h = Math.imul(h ^ (h >>> 15), 2246822507);
-    h = Math.imul(h ^ (h >>> 13), 3266489909);
-    return ((h ^= h >>> 16) >>> 0) / 4294967296;
-  };
-}
 
 export function scoreRound(s) {
   let score = 100;
@@ -129,6 +120,7 @@ const PROFILES = {
 function earnMarks(s, r, outcome, hostOf) {
   const marks = [];
   const add = (name, detail) => marks.push({ name, detail });
+  if (outcome === 'CONTAINED' && s.hunt.difficulty === 'carrion') add('Crowned', 'Contained on Carrion King');
   if (!s.nodesLost.length) add('Clean Bones', 'Not a single node rotted');
   if (s.firstResponse !== null && s.firstResponse <= 3) add('Quick Talons', `Acted ${fmtSeconds(s.firstResponse)} after the first alert`);
   if (r.blocked && r.firstRotTime !== null && r.blockAt > r.firstRotTime && outcome === 'CONTAINED')
@@ -160,6 +152,7 @@ function turningPoint(s) {
 }
 
 function writeSummary(s, r, outcome, grade, hostOf, siteOf, rand) {
+  const huntName = s.hunt.baseName ?? s.hunt.name; // "The Siege", not "Daily #3 · The Siege"
   const say = (...options) => options[Math.floor(rand() * options.length)];
   const lines = [];
 
@@ -168,13 +161,13 @@ function writeSummary(s, r, outcome, grade, hostOf, siteOf, rand) {
     const site = siteOf(r.firstRot.nodeId);
     lines.push(
       say(
-        `${s.hunt.name} took hold at ${host} in ${site} at ${clock(r.firstRot.time)}.`,
+        `${huntName} took hold at ${host} in ${site} at ${clock(r.firstRot.time)}.`,
         `The first rot surfaced at ${clock(r.firstRot.time)}: ${host}, ${site}.`,
         `It began in ${site}, where ${host} turned at ${clock(r.firstRot.time)}.`,
       ),
     );
   } else {
-    lines.push(say(`${s.hunt.name} never found purchase.`, `${s.hunt.name} circled, but nothing gave way.`, 'The rot came looking and found nothing to feed on.'));
+    lines.push(say(`${huntName} never found purchase.`, `${huntName} circled, but nothing gave way.`, 'The rot came looking and found nothing to feed on.'));
   }
 
   if (s.firstResponse === null) {
@@ -241,7 +234,7 @@ export function buildReport(s, topology, now = new Date()) {
 
   const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
   const caseNumber = `VG-${stamp}-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`;
-  const rand = seeded(caseNumber);
+  const rand = seededRandom(caseNumber); // wording varies per case but is stable within one
   const profile = PROFILES[outcome].find((p) => p.when(s, r));
 
   // Key moments: alarms, stage changes and analyst actions, in time order.
@@ -257,6 +250,8 @@ export function buildReport(s, topology, now = new Date()) {
     caseNumber,
     date: now.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }),
     huntName: s.hunt.name,
+    difficulty: DIFFICULTIES[s.hunt.difficulty ?? 'vulture'].name,
+    daily: s.hunt.daily ?? null,
     outsideIp: r.outsideHunt ? s.outsideIp : null, // only meaningful when the Hunt involves the outside
     origin: r.origin ? `${hostOf(r.origin)} · ${siteOf(r.origin)}` : 'None',
     outcome,

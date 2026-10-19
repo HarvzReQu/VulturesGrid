@@ -36,6 +36,8 @@ It is a visual game only. There is no real networking, scanning or security tool
   - A spinning crosshair marks where the rot is heading next, and **⇪** marks a node leaking data.
   - Pins for off-screen nodes stick to the screen edge with an arrow.
   - Hovering any node shows its name, IP and state.
+- **Daily Hunt:** one round per day, identical for every player in the world (seeded from the UTC date) and always on Vulture difficulty, so grades can be compared. It's numbered (Daily #1, #2…), shows a countdown to the next one and your best grade today, and shared results link to `?daily` so friends play the same round.
+- **Difficulty:** **Fledgling** (slower rot, shorter cooldowns, 4s restore), **Vulture** (standard), or **Carrion King** (rot 30% faster, cooldowns 40% longer, 7s restore). Containing a round on Carrion King earns the **Crowned** mark. Your choice is remembered.
 - **Four Hunts** (or Random), each a different spreading pattern. Every round is rebuilt when it starts: The Lure and The Rot begin at a random branch, The Lure aims at a random HQ server, The Rot circles in a random direction, and the lateral targets in The Siege and The Bleed shift between rounds.
   - **The Lure** hops node by node from a branch workstation to the HQ domain controller.
   - **The Rot** leaps from branch to branch around the ring.
@@ -101,6 +103,8 @@ Handy deep links for development or sharing:
 - `&skip=15` fast-forwards that many seconds.
 - `&focus=hq-db` frames a node and opens its dossier.
 - `?tutorial` jumps straight into the guided Training Hunt.
+- `?daily` preselects today's Daily Hunt.
+- `&level=carrion` sets the difficulty for a `?hunt=` link (`fledgling`, `vulture` or `carrion`).
 
 ## Deploying to Vercel
 

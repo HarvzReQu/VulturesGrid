@@ -386,6 +386,54 @@ select,
   min-width: 0;
 }
 
+.difficulty {
+  display: flex;
+  margin-top: 8px;
+  border: 1px solid rgba(232, 226, 212, 0.2);
+}
+
+.difficulty button {
+  flex: 1;
+  padding: 5px 4px;
+  font-family: var(--serif);
+  font-size: 14px;
+  background: transparent;
+  border: 0;
+  border-right: 1px solid rgba(232, 226, 212, 0.12);
+  color: var(--bone-dim);
+  cursor: pointer;
+}
+
+.difficulty button:last-child {
+  border-right: 0;
+}
+
+.difficulty button[aria-checked='true'] {
+  background: var(--bone);
+  color: var(--void);
+  font-weight: 700;
+}
+
+.difficulty button[data-level='carrion'][aria-checked='true'] {
+  background: var(--crimson);
+  color: var(--bone);
+}
+
+.difficulty button:disabled {
+  cursor: not-allowed;
+}
+
+.difficulty button:disabled:not([aria-checked='true']) {
+  opacity: 0.4;
+}
+
+.difficulty-note {
+  margin: 4px 0 0;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--bone-dim);
+}
+
 .hunt-blurb {
   margin: 10px 0 0;
   font-size: 15px;
