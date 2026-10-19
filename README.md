@@ -22,7 +22,7 @@ It is a visual game only. There is no real networking, scanning or security tool
 ## Features
 
 - **The Carcass:** an HQ data center (core router, firewall, web, domain, file and database servers) ringed by six branch offices. Each node type has its own low-poly shape: tall monoliths for servers, flat panels for workstations, spinning octahedrons for routers and jagged bone walls for firewalls.
-- **Four Hunts** (or Random), each a different spreading pattern:
+- **Four Hunts** (or Random), each a different spreading pattern. Every round is rebuilt when it starts: The Lure and The Rot begin at a random branch, The Lure aims at a random HQ server, The Rot circles in a random direction, and the lateral targets in The Siege and The Bleed shift between rounds.
   - **The Lure** hops node by node from a branch workstation to the HQ domain controller.
   - **The Rot** leaps from branch to branch around the ring.
   - **The Siege** sends a swarm from off-map at the web server until it gives way.
@@ -46,10 +46,13 @@ It is a visual game only. There is no real networking, scanning or security tool
   - **Trace:** draw the path the rot took, in crimson.
 - **The Watch:** a live event log with INFO / WARN / CRIT tags, search and a severity filter. Click a row to fly to its node.
 - **Pause and 0.5× / 1× / 2× speed**, and a smooth spiralling camera swoop when you double-click a node.
-- **Case File:** an end-of-round report styled as a stamped investigative document (**CONTAINED** or **CONSUMED**). It includes:
+- **Case File:** an end-of-round report styled as a stamped investigative document (**CONTAINED** or **CONSUMED**). No two read alike. Each one includes:
+  - an **analyst profile** based on how you played, such as *The Gatekeeper*, *The Surgeon*, *Scorched Earth*, *The Bystander* or *Bled Dry*
+  - **marks** earned that round, such as Clean Bones, Quick Talons, Patient Zero, Crown Intact or Firebreak
+  - a summary written from the round's own facts: where the rot began, the turning point and the near misses
   - a case number and an A–F grade
   - time to first response, when the red was cleared, nodes lost and data lost
-  - a timeline, a list of actions taken and an auto-written summary
+  - a timeline and a list of actions taken
 - **Replay:** after a round, scrub the timeline to any moment and watch it play back.
 - **Share result:** post your grade straight from the Case File, using the phone share sheet or a clipboard copy.
 - **Ambient sound** (off by default; speaker button or `M`): wind gusts, a low rumble, and distant wingbeats that come more often as the rot spreads. It's all generated live with the Web Audio API, with no audio files.
@@ -109,9 +112,9 @@ src/
 
 ### Adding a Hunt
 
-Hunts are plain data in [`src/sim/hunts.js`](src/sim/hunts.js). Each one is a list of timed steps, such as `scent`, `rot`, `spread`, `stream` and `stream-stop`. The step format is documented at the top of that file. Add an object to `HUNTS`; it appears in the dropdown automatically, and you don't need to change the engine.
+Hunts live in [`src/sim/hunts.js`](src/sim/hunts.js). Each one has a `build(rand)` function that returns a list of timed steps, such as `scent`, `rot`, `spread`, `stream` and `stream-stop`, so every round can differ. The step format is documented at the top of that file. Add an object to `HUNTS`; it appears in the dropdown automatically, and you don't need to change the engine.
 
-Grading weights live at the top of [`src/sim/scoring.js`](src/sim/scoring.js).
+Grading weights, analyst profiles and marks all live in [`src/sim/scoring.js`](src/sim/scoring.js).
 
 ---
 

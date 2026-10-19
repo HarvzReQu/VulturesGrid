@@ -4,12 +4,15 @@ import { clockLabel, escapeHtml } from './format.js';
 function shareText(r) {
   const lost = r.stats.find(([k]) => k === 'Nodes lost')[1];
   const data = r.stats.find(([k]) => k === 'Data lost')[1];
-  return [
+  const lines = [
     `VulturesGrid · ${r.huntName}`,
     `Grade ${r.grade} (${r.score}/100) · ${r.outcome}`,
+    `Analyst profile: ${r.profile.title}. "${r.profile.epithet}"`,
     `Nodes lost: ${lost} · Data lost: ${data}`,
-    'We circle what is already rotten.',
-  ].join('\n');
+  ];
+  if (r.marks.length) lines.push(`Marks: ${r.marks.map((m) => m.name).join(', ')}`);
+  lines.push('We circle what is already rotten.');
+  return lines.join('\n');
 }
 
 // Clipboard API where allowed, falling back to a hidden textarea for older browsers.
@@ -78,8 +81,9 @@ export function createCaseFile({ onReplay, onNewHunt }) {
         <dl class="cf-meta">
           <dt>Case No.</dt><dd>${r.caseNumber}</dd>
           <dt>Hunt</dt><dd>${escapeHtml(r.huntName)}</dd>
+          <dt>First rot</dt><dd>${escapeHtml(r.origin)}</dd>
           <dt>Closed</dt><dd>${escapeHtml(r.date)}</dd>
-          <dt>Outside source</dt><dd>${escapeHtml(r.outsideIp)}</dd>
+          ${r.outsideIp ? `<dt>Outside source</dt><dd>${escapeHtml(r.outsideIp)}</dd>` : ''}
         </dl>
         <div class="cf-grade ${outcomeClass}" aria-label="Grade ${r.grade}, score ${r.score}">
           <span>${r.grade}</span><small>${r.score} / 100</small>
@@ -87,6 +91,19 @@ export function createCaseFile({ onReplay, onNewHunt }) {
       </header>
 
       <div class="cf-stamp ${outcomeClass}" aria-label="Outcome">${r.outcome}</div>
+
+      <section class="cf-profile ${outcomeClass}">
+        <p class="cf-profile-label">Analyst profile</p>
+        <p class="cf-profile-title">${escapeHtml(r.profile.title)}</p>
+        <p class="cf-profile-epithet">${escapeHtml(r.profile.epithet)}</p>
+        ${
+          r.marks.length
+            ? `<ul class="cf-marks" aria-label="Marks earned">${r.marks
+                .map((m) => `<li title="${escapeHtml(m.detail)}"><b>${escapeHtml(m.name)}</b><span>${escapeHtml(m.detail)}</span></li>`)
+                .join('')}</ul>`
+            : '<p class="cf-nomarks">No marks earned this round.</p>'
+        }
+      </section>
 
       <section>
         <h3>Findings</h3>
