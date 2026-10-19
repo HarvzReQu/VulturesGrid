@@ -6,7 +6,7 @@
 
 It is a visual game only. There is no real networking, scanning or security tooling. Every node, hostname, IP address and bit of "traffic" is made up and drawn as shapes and particles in Three.js. Everything runs in the browser, with no backend.
 
-**Live demo:** _coming soon_ (`https://your-deployment.vercel.app`)
+**Live demo:** [vulturesgrid.vercel.app](https://vulturesgrid.vercel.app)
 
 ---
 
