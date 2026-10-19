@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 
 const DURATION = 1.9;
+const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const END_DISTANCE = 13;
 const END_POLAR = 0.95; // radians from straight down
 const SPIRAL = 0.9; // extra radians of circling during the descent
@@ -28,7 +29,8 @@ export function createSwoop({ camera, controls }) {
 
   function update(dt) {
     if (!flight) return;
-    flight.k = Math.min(1, flight.k + dt / DURATION);
+    // Reduced motion: arrive in a single step instead of flying.
+    flight.k = reducedMotion() ? 1 : Math.min(1, flight.k + dt / DURATION);
     const e = easeInOutCubic(flight.k);
     const { start, end } = flight;
     sph.set(

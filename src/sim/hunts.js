@@ -189,6 +189,15 @@ export const TWIN = {
   },
 };
 
+// Endless Watch: starts empty; the Endless controller (endless.js) feeds it waves.
+export const ENDLESS = {
+  id: 'endless',
+  name: 'Endless Watch',
+  blurb: 'Waves of attacks, each faster than the last. The watch ends when 8 nodes rot at once or 120 MB bleed out. Survive as long as you can.',
+  duration: Infinity,
+  build: () => ({ steps: [], endless: true, wave: 0, maxCages: 4 }),
+};
+
 // The guided tutorial's round. Not in the dropdown; the tutorial holds the timeline
 // between lessons, so these times only set the order of events.
 export const TRAINING = {
@@ -213,6 +222,6 @@ export const TRAINING = {
 
 // Returns a playable round: the Hunt's definition plus this round's freshly built steps.
 export function pickHunt(id, rand = Math.random) {
-  const def = id === 'random' ? pick(rand, HUNTS) : ([...HUNTS, TWIN].find((h) => h.id === id) ?? HUNTS[0]);
+  const def = id === 'random' ? pick(rand, HUNTS) : ([...HUNTS, TWIN, ENDLESS].find((h) => h.id === id) ?? HUNTS[0]);
   return { ...def, ...def.build(rand) };
 }

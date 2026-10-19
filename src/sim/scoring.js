@@ -25,6 +25,10 @@ const PENALTY = {
   perIsolated: 1, // quarantine has a cost: those nodes are offline
 };
 const CONSUMED_CAP = 69; // a round that ends with rot still spreading can't beat a D
+// Endless Watch is graded on weighted seconds survived: 144 weighted seconds is an A.
+const ENDLESS_SECONDS_PER_POINT = 1.6;
+
+const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
 const ACTION_VERB = {
   isolate: 'Isolated',
@@ -50,6 +54,11 @@ const clock = (s) => {
 };
 
 export function scoreRound(s) {
+  if (s.hunt.endless) {
+    const weight = DIFFICULTIES[s.hunt.difficulty ?? 'vulture'].endlessWeight;
+    const score = Math.max(0, Math.min(100, Math.round((s.time * weight) / ENDLESS_SECONDS_PER_POINT)));
+    return { score, grade: GRADES.find(([min]) => score >= min)[1], outcome: 'OVERRUN' };
+  }
   let score = 100;
   score -= s.nodesLost.length * PENALTY.perNodeLost;
   score -= s.stillRotting * PENALTY.perStillRotting;
@@ -109,6 +118,13 @@ const PROFILES = {
     { title: 'The Warden', epithet: 'Caged the sick before they could spread it.', when: (s, r) => r.isolates >= 1 },
     { title: 'The Steady Hand', epithet: 'No panic. Just the work.', when: () => true },
   ],
+  OVERRUN: [
+    { title: 'The Last Vulture', epithet: 'Held the line long after any other would have fallen.', when: (s) => s.time >= 240 },
+    { title: 'The Long Watch', epithet: 'Kept the vigil through wave after wave.', when: (s) => s.time >= 150 },
+    { title: 'The Bystander', epithet: 'Watched the feast from the treeline.', when: (s) => !s.actions.length },
+    { title: 'Bled Dry', epithet: 'The grid bled out while the watch stood guard.', when: (s) => s.hunt.overrun === 'bleed' },
+    { title: 'Swarmed', epithet: 'The waves came faster than the hands.', when: () => true },
+  ],
   CONSUMED: [
     { title: 'The Bystander', epithet: 'Watched the feast from the treeline.', when: (s) => !s.actions.length },
     { title: 'Bled Dry', epithet: 'The grid bled out while the watch stood guard.', when: (s) => s.dataLostMB > 50 },
@@ -124,6 +140,10 @@ function earnMarks(s, r, outcome, hostOf) {
   const add = (name, detail) => marks.push({ name, detail });
   if (outcome === 'CONTAINED' && s.hunt.difficulty === 'carrion') add('Crowned', 'Contained on Carrion King');
   if (outcome === 'CONTAINED' && s.hunt.parts) add('Two Fronts', 'Held off two Hunts at once');
+  if (s.hunt.endless) {
+    add(`Wave ${s.hunt.wave}`, `Survived ${s.hunt.wave} wave${s.hunt.wave === 1 ? '' : 's'}`);
+    if (s.time >= 180) add('Long Watch', `Held for ${mmss(s.time)}`);
+  }
   if (!s.nodesLost.length) add('Clean Bones', 'Not a single node rotted');
   if (s.firstResponse !== null && s.firstResponse <= 3) add('Quick Talons', `Acted ${fmtSeconds(s.firstResponse)} after the first alert`);
   if (r.blocked && r.firstRotTime !== null && r.blockAt > r.firstRotTime && outcome === 'CONTAINED')
@@ -158,6 +178,25 @@ function writeSummary(s, r, outcome, grade, hostOf, siteOf, rand) {
   const huntName = s.hunt.baseName ?? s.hunt.name; // "The Siege", not "Daily #3 · The Siege"
   const say = (...options) => options[Math.floor(rand() * options.length)];
   const lines = [];
+
+  if (s.hunt.endless) {
+    lines.push(
+      say(
+        `The Endless Watch held for ${mmss(s.time)} across ${s.hunt.wave} waves.`,
+        `${s.hunt.wave} waves came in ${mmss(s.time)} before the grid gave way.`,
+      ),
+    );
+    if (s.firstResponse !== null) lines.push(`The first response came ${fmtSeconds(s.firstResponse)} after the first alert.`);
+    else lines.push('No analyst action was taken.');
+    lines.push(`${s.nodesLost.length} node${s.nodesLost.length === 1 ? '' : 's'} rotted over the watch.`);
+    lines.push(
+      s.hunt.overrun === 'bleed'
+        ? `It ended when ${s.dataLostMB.toFixed(0)} MB had bled out.`
+        : 'It ended when too many nodes were rotting at once.',
+    );
+    lines.push(say('Every watch ends. The question is when.', 'The birds were patient. They always are.'));
+    return lines.join(' ');
+  }
 
   if (r.firstRot) {
     const host = hostOf(r.firstRot.nodeId);
@@ -264,7 +303,17 @@ export function buildReport(s, topology, now = new Date()) {
     score,
     profile: { title: profile.title, epithet: profile.epithet },
     marks: earnMarks(s, r, outcome, hostOf),
-    stats: [
+    endless: s.hunt.endless ? { survived: mmss(s.time), waves: s.hunt.wave } : null,
+    stats: s.hunt.endless
+      ? [
+          ['Survived', mmss(s.time)],
+          ['Waves', String(s.hunt.wave)],
+          ['First response', s.firstResponse === null ? 'None' : fmtSeconds(s.firstResponse)],
+          ['Nodes lost', String(s.nodesLost.length)],
+          ['Data lost', `${s.dataLostMB.toFixed(1)} MB`],
+          ['Quarantined', String(s.isolated)],
+        ]
+      : [
       ['First response', s.firstResponse === null ? 'None' : fmtSeconds(s.firstResponse)],
       ['Red cleared at', s.clearedAt === null ? (s.nodesLost.length ? 'Never' : 'n/a') : clock(s.clearedAt)],
       ['Nodes lost', String(s.nodesLost.length)],

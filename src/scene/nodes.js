@@ -35,6 +35,7 @@ export function createNodes(scene, nodeData) {
   const pickables = [];
   let selected = null;
   let now = 0;
+  let contrast = false; // high-contrast mode: stronger outlines and rings
 
   for (const data of nodeData) {
     const shape = shapeFor(data.role);
@@ -203,7 +204,7 @@ export function createNodes(scene, nodeData) {
 
     const tone = state === 'alive' ? BONE : STATE_COLOR[state];
     entry.outline.material.color.copy(state === 'rotting' ? RED_GLOW : tone);
-    entry.outline.material.opacity = isSelected ? 0.95 : state === 'alive' ? 0.3 : 0.55;
+    entry.outline.material.opacity = isSelected ? 0.95 : contrast ? 0.85 : state === 'alive' ? 0.3 : 0.55;
 
     const { ringBase } = entry;
     entry.ring.material.color.copy(entry.restoring ? STATE_COLOR.revived : state === 'rotting' ? RED_GLOW : tone);
@@ -211,7 +212,7 @@ export function createNodes(scene, nodeData) {
       entry.ring.material.opacity = 0.75;
       entry.ring.scale.setScalar(ringBase * (1 + Math.sin(t * 3) * 0.06));
     } else {
-      entry.ring.material.opacity = state === 'alive' ? 0.08 : 0.35;
+      entry.ring.material.opacity = state === 'alive' ? (contrast ? 0.25 : 0.08) : contrast ? 0.7 : 0.35;
       entry.ring.scale.setScalar(ringBase);
     }
 
@@ -223,5 +224,13 @@ export function createNodes(scene, nodeData) {
     for (const entry of byId.values()) animate(entry, dt, t);
   }
 
-  return { byId, pickables, select, setState, setRestoring, update };
+  return {
+    byId,
+    pickables,
+    select,
+    setState,
+    setRestoring,
+    update,
+    setContrast: (on) => (contrast = on),
+  };
 }

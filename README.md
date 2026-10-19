@@ -78,6 +78,13 @@ It is a visual game only. There is no real networking, scanning or security tool
 - **Twin Hunt:** two different Hunts at once, the second a few seconds behind the first. Containing one earns the **Two Fronts** mark.
 - **Your record:** every case you close, kept in your browser. It shows rounds played, containment rate, A grades and your current streak, plus your best grade for every Hunt at every difficulty and your recent cases. The Case File flags a new personal best.
 - **Interactive tutorial:** a guided Training Hunt that walks you through spotting a Scented node, opening its dossier, Isolate, Restore, Trace and Block, then The Watch, speed controls and your first Case File. The Hunt waits at each lesson until you've done the step. It's offered on the first visit and in the Hunt panel, and `?tutorial` opens it directly.
+- **Endless Watch:** waves of random Hunts, each faster and sooner than the last, with a new outside attacker on every outside wave and only **4 cages** for quarantine. The watch ends when 8 nodes rot at once or 120 MB bleed out. The kill chain bar shows pressure, and the Case File grades time survived (weighted by difficulty), with Endless-only profiles such as *The Long Watch* and *The Last Vulture*.
+- **Accessibility:**
+  - Full keyboard play: **N / Shift+N** jumps to the next node that needs attention, **1–4** fire the dossier actions, and the arrow keys pan.
+  - **High contrast** mode (**C**) brightens text, borders, lines and outlines.
+  - Scented and Rotting pins differ by shape (**?** vs **!**), not just color.
+  - Screen-reader announcements for nodes turning and rounds ending.
+  - The camera jumps instead of flying when reduced motion is on.
 - **Polish:**
   - a loading screen where the skull emblem fades in and the tagline types itself out
   - a **How to Hunt** guide on first visit

@@ -2,10 +2,10 @@ import { STATES } from '../sim/states.js';
 import { clockLabel, escapeHtml } from './format.js';
 
 const ACTIONS = [
-  { id: 'isolate', name: 'Isolate', sub: 'Quarantine; cut its links' },
-  { id: 'block', name: 'Block', sub: 'Blocklist the outside source' },
-  { id: 'restore', name: 'Restore', sub: 'Revive a Rotting node' },
-  { id: 'trace', name: 'Trace', sub: 'Show the path the rot took' },
+  { id: 'isolate', key: '1', name: 'Isolate', sub: 'Quarantine; cut its links' },
+  { id: 'block', key: '2', name: 'Block', sub: 'Blocklist the outside source' },
+  { id: 'restore', key: '3', name: 'Restore', sub: 'Revive a Rotting node' },
+  { id: 'trace', key: '4', name: 'Trace', sub: 'Show the path the rot took' },
 ];
 
 // Case-file side panel for the selected node: details, recent events and the four actions.
@@ -45,7 +45,8 @@ export function createDossier({ engine, topology, viewState, isLocked, isAllowed
       <div class="dossier-actions">
         ${ACTIONS.map(
           (a) => `
-          <button class="act" data-action="${a.id}">
+          <button class="act" data-action="${a.id}" aria-keyshortcuts="${a.key}">
+            <kbd class="act-key">${a.key}</kbd>
             <span class="act-name">${a.name}</span>
             <span class="act-sub">${a.sub}</span>
             <span class="act-cd"></span>
@@ -86,9 +87,16 @@ export function createDossier({ engine, topology, viewState, isLocked, isAllowed
       const remaining = engine.cooldown(a.id);
       let name = a.name;
       let available = true;
+      let sub = a.sub;
       if (a.id === 'isolate') {
-        if (state === 'picked') name = 'Release';
-        else available = remaining === 0;
+        if (state === 'picked') {
+          name = 'Release';
+          sub = 'Let it out of the cage';
+        } else {
+          const cages = engine.freeCages();
+          available = remaining === 0 && cages > 0;
+          if (Number.isFinite(cages)) sub = cages > 0 ? `${cages} cage${cages === 1 ? '' : 's'} free` : 'No free cages: release one';
+        }
       } else if (a.id === 'block') {
         if (engine.blocked) name = 'Blocked';
         available = huntActive && !engine.blocked && remaining === 0;
@@ -99,11 +107,12 @@ export function createDossier({ engine, topology, viewState, isLocked, isAllowed
       }
       if (locked || !isAllowed(a.id)) available = false;
       const cooling = remaining > 0 && !(a.id === 'isolate' && state === 'picked');
-      const key = `${name}|${available}|${cooling ? remaining.toFixed(1) : ''}`;
+      const key = `${name}|${sub}|${available}|${cooling ? remaining.toFixed(1) : ''}`;
       if (buttonState.get(a.id) === key) continue;
       buttonState.set(a.id, key);
       button.disabled = !available;
       button.querySelector('.act-name').textContent = name;
+      button.querySelector('.act-sub').textContent = sub;
       button.querySelector('.act-cd').textContent = cooling ? `${remaining.toFixed(1)}s` : '';
       button.style.setProperty('--cd', cooling ? remaining / engine.cooldownLength(a.id) : 0);
     }

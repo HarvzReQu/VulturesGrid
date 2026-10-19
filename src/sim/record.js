@@ -52,16 +52,18 @@ export function clearRecord() {
 
 // Headline numbers for the record view.
 export function recordStats(record) {
+  // Endless Watch always ends overrun, so it doesn't count toward containment or the streak.
   const cases = record.cases;
-  const contained = cases.filter((c) => c.outcome === 'CONTAINED').length;
+  const hunts = cases.filter((c) => c.outcome !== 'OVERRUN');
+  const contained = hunts.filter((c) => c.outcome === 'CONTAINED').length;
   let streak = 0;
-  for (const c of cases) {
+  for (const c of hunts) {
     if (c.outcome !== 'CONTAINED') break;
     streak++;
   }
   return {
     rounds: cases.length,
-    containedRate: cases.length ? Math.round((contained / cases.length) * 100) : 0,
+    containedRate: hunts.length ? Math.round((contained / hunts.length) * 100) : 0,
     aGrades: cases.filter((c) => c.grade === 'A').length,
     streak,
   };

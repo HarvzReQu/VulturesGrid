@@ -93,6 +93,109 @@ body {
   border-color: var(--bone);
 }
 
+.contrast-toggle {
+  pointer-events: auto;
+  align-self: flex-start;
+  width: 26px;
+  height: 26px;
+  margin-top: 4px;
+  margin-left: -6px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(232, 226, 212, 0.35);
+  background: transparent;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--bone-dim);
+  cursor: pointer;
+}
+
+.contrast-toggle:hover {
+  color: var(--bone);
+  border-color: var(--bone);
+}
+
+.contrast-toggle[aria-pressed='true'] {
+  color: var(--void);
+  background: var(--bone);
+  border-color: var(--bone);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.act-key {
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  padding: 0 4px;
+  border: 1px solid rgba(232, 226, 212, 0.25);
+  color: var(--bone-dim);
+}
+
+.dossier:focus {
+  outline: none;
+}
+
+.dossier:focus-visible {
+  outline: 1px solid var(--amber);
+}
+
+/* High contrast: brighter text and borders, opaque panels, bigger pins */
+body.hc {
+  --bone-dim: rgba(232, 226, 212, 0.9);
+}
+
+.hc .panel,
+.hc .dossier,
+.hc .coach,
+.hc .transport,
+.hc .timeline {
+  background: #0d0d0e;
+  border-color: rgba(232, 226, 212, 0.6);
+}
+
+.hc .kc-seg {
+  opacity: 0.9;
+}
+
+.hc .watch-row,
+.hc .dossier-facts,
+.hc .record-grid td,
+.hc .record-grid th {
+  border-color: rgba(232, 226, 212, 0.3);
+}
+
+.hc .watch-row time,
+.hc .dossier-events time,
+.hc .hud-hint,
+.hc .site-footer {
+  color: rgba(232, 226, 212, 0.75);
+}
+
+.hc .act {
+  border-color: rgba(232, 226, 212, 0.7);
+}
+
+.hc .beacon-icon {
+  width: 32px;
+  height: 32px;
+  font-size: 20px;
+  border-width: 3px;
+}
+
+.hc .tag {
+  border-width: 2px;
+}
+
 .sound-toggle {
   pointer-events: auto;
   align-self: flex-start;
@@ -163,9 +266,9 @@ body {
 .killchain {
   position: fixed;
   top: 22px;
-  left: 50%;
+  left: calc(50% + 40px); /* nudged right: the header and its buttons sit to the left */
   transform: translateX(-50%);
-  width: min(560px, 44vw);
+  width: min(500px, 38vw);
   display: flex;
   gap: 18px;
   pointer-events: none;
@@ -331,6 +434,7 @@ select,
 .no-webgl .transport,
 .no-webgl .hud-hint,
 .no-webgl .help-open,
+.no-webgl .contrast-toggle,
 .no-webgl .sound-toggle {
   display: none;
 }
@@ -1980,7 +2084,7 @@ select:disabled,
     display: none;
   }
   .killchain {
-    left: 400px;
+    left: 470px;
     right: 370px;
     width: auto;
     transform: none;

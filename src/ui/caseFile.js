@@ -4,6 +4,14 @@ import { clockLabel, escapeHtml } from './format.js';
 function shareText(r) {
   const lost = r.stats.find(([k]) => k === 'Nodes lost')[1];
   const data = r.stats.find(([k]) => k === 'Data lost')[1];
+  if (r.endless) {
+    return [
+      `VulturesGrid · Endless Watch (${r.difficulty})`,
+      `Survived ${r.endless.survived} across ${r.endless.waves} waves · Grade ${r.grade}`,
+      `Analyst profile: ${r.profile.title}. "${r.profile.epithet}"`,
+      'We circle what is already rotten.',
+    ].join('\n');
+  }
   const lines = [
     `VulturesGrid · ${r.daily ? `Daily Hunt #${r.daily.number} (${r.huntName.split(' · ')[1]})` : r.huntName}`,
     `Grade ${r.grade} (${r.score}/100) · ${r.outcome} · ${r.difficulty}`,

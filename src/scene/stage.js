@@ -33,7 +33,8 @@ export function createStage(container) {
   controls.target.set(0, 0, 0);
 
   // Lighting: faint sky fill plus a dim, cold moon overhead.
-  scene.add(new THREE.HemisphereLight(0x8c93a3, PALETTE.void, 1.0));
+  const skyLight = new THREE.HemisphereLight(0x8c93a3, PALETTE.void, 1.0);
+  scene.add(skyLight);
 
   const moonLight = new THREE.DirectionalLight(PALETTE.moon, 2.4);
   moonLight.position.set(-24, 60, -18);
@@ -90,7 +91,20 @@ export function createStage(container) {
   }
   window.addEventListener('resize', resize);
 
+  // High contrast: brighter light, thinner fog, a more visible grid.
+  function setContrast(on) {
+    skyLight.intensity = on ? 1.7 : 1.0;
+    moonLight.intensity = on ? 3.2 : 2.4;
+    grid.material.opacity = on ? 0.14 : 0.06;
+    if (scene.fog) scene.fog.density = on ? 0.004 : 0.0075;
+  }
+
+  // Arrow keys pan the map (OrbitControls ignores them while a form field has focus).
+  controls.listenToKeyEvents(window);
+  controls.keyPanSpeed = 14;
+
   return {
+    setContrast,
     lowPower,
     renderer,
     scene,

@@ -251,14 +251,37 @@ export function createEngine(topology) {
     }
 
     // The Hunt ends at its duration, but lets any Restore already underway finish first.
-    if (cursor >= steps.length && time >= hunt.duration && restoring.size === 0) {
-      running = false;
-      finished = true;
-      [...streams.keys()].forEach(stopStream);
-      const rotting = countState('rotting');
-      record(rotting ? 'CRIT' : 'INFO', rotting ? `Hunt over: ${rotting} node(s) still rotting` : 'Hunt over: all rot contained');
-      emit({ type: 'end', hunt, rotting });
-    }
+    if (cursor >= steps.length && time >= hunt.duration && restoring.size === 0) finish();
+  }
+
+  function finish(message) {
+    running = false;
+    finished = true;
+    [...streams.keys()].forEach(stopStream);
+    const rotting = countState('rotting');
+    record(
+      rotting ? 'CRIT' : 'INFO',
+      message ?? (rotting ? `Hunt over: ${rotting} node(s) still rotting` : 'Hunt over: all rot contained'),
+    );
+    emit({ type: 'end', hunt, rotting });
+  }
+
+  // ---- Endless Watch: steps added mid-round, ended on demand -------------------
+
+  // Adds steps (absolute Hunt times) to the running round, keeping pending steps in order.
+  function inject(newSteps) {
+    if (!running) return;
+    const pending = hunt.steps.slice(cursor).concat(newSteps).sort((a, b) => a.at - b.at);
+    hunt.steps = hunt.steps.slice(0, cursor).concat(pending);
+  }
+
+  // A new attacker: fresh outside IP, and the blocklist no longer covers it.
+  function rotateOutside() {
+    outsideIp = `203.0.113.${20 + Math.floor(Math.random() * 200)}`;
+    const wasBlocked = blocked;
+    blocked = false;
+    record('WARN', `A new outside source appears: ${outsideIp}${wasBlocked ? ' (not on the blocklist)' : ''}`);
+    rerouteStreams();
   }
 
   // ---- Analyst actions -------------------------------------------------------
@@ -279,6 +302,9 @@ export function createEngine(topology) {
     return true;
   }
 
+  // Endless Watch limits how many nodes can be caged at once.
+  const freeCages = () => (hunt?.maxCages ? hunt.maxCages - countState('picked') : Infinity);
+
   const wasRotting = (id) => state.get(id) === 'rotting' || (state.get(id) === 'picked' && isolatedFrom.get(id) === 'rotting');
 
   function isolate(id) {
@@ -291,6 +317,10 @@ export function createEngine(topology) {
       rerouteStreams();
       act('release', id);
       return true;
+    }
+    if (freeCages() <= 0) {
+      record('INFO', `No free cages (${hunt.maxCages} in use). Release one first.`, id);
+      return false;
     }
     if (!spend('isolate')) return false;
     isolatedFrom.set(id, state.get(id));
@@ -401,6 +431,7 @@ export function createEngine(topology) {
       duration: hunt?.duration ?? 0,
       outsideIp,
       firstAlertAt,
+      time, // how long the round actually ran (Endless Watch: time survived)
       firstResponse: firstActionAt === null ? null : Math.max(0, firstActionAt - (firstAlertAt ?? 0)),
       clearedAt: countState('rotting') === 0 && everRotted.size ? clearedAt : null,
       nodesLost: [...everRotted],
@@ -426,6 +457,10 @@ export function createEngine(topology) {
     stageProgress,
     countState,
     summary,
+    inject,
+    rotateOutside,
+    endNow: (message) => running && finish(message),
+    note: (level, message, nodeId) => record(level, message, nodeId),
     // Tutorial controls: stop the timeline at a Hunt time, let it go, and refresh cooldowns.
     holdAt: (t) => (holdAt = t),
     releaseHold: () => (holdAt = null),
@@ -440,6 +475,7 @@ export function createEngine(topology) {
     canTrace: (id) => cause.has(id),
     restoreProgress: (id) => (restoring.has(id) ? 1 - (restoring.get(id) - clock) / restoreTime : null),
     cooldownLength,
+    freeCages,
     get hunt() {
       return hunt;
     },

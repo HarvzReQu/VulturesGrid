@@ -47,6 +47,7 @@
         <p class="tagline">We circle what is already rotten.</p>
       </div>
       <button class="help-open" id="help-open" aria-label="How to Hunt">?</button>
+      <button class="contrast-toggle" id="contrast-toggle" aria-pressed="false" aria-label="High contrast">◐</button>
       <button class="sound-toggle" id="sound-toggle" aria-pressed="false" aria-label="Play ambient sound">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" />
@@ -58,7 +59,7 @@
 
     <nav class="killchain" id="killchain" aria-label="Kill chain progress"></nav>
 
-    <aside class="dossier panel" id="dossier" aria-label="Node dossier" hidden>
+    <aside class="dossier panel" id="dossier" aria-label="Node dossier" tabindex="-1" hidden>
       <div class="dossier-tab">Dossier</div>
       <button class="dossier-close" aria-label="Close dossier">×</button>
       <div class="dossier-body"></div>
@@ -99,7 +100,7 @@
             <button data-level="CRIT" aria-pressed="false">Crit</button>
           </div>
         </div>
-        <ol class="watch-list" aria-live="polite"></ol>
+        <ol class="watch-list"></ol>
       </section>
 
       <ul class="legend panel" aria-label="Node states">
@@ -178,7 +179,11 @@
         <dt>Mouse</dt><dd>Drag to orbit, right-drag to pan, scroll to zoom.</dd>
         <dt>Touch</dt><dd>One finger to orbit, two to zoom and pan.</dd>
         <dt>Double-click</dt><dd>Swoop down onto a node.</dd>
+        <dt>N / Shift+N</dt><dd>Jump to the next / previous node that needs attention, worst first.</dd>
+        <dt>1 2 3 4</dt><dd>Isolate, Block, Restore, Trace in the open dossier.</dd>
+        <dt>Arrow keys</dt><dd>Pan the map.</dd>
         <dt>Space / Esc</dt><dd>Pause / close the dossier.</dd>
+        <dt>C</dt><dd>High contrast on or off.</dd>
         <dt>M</dt><dd>Sound on or off (off by default): wind, distant wings, and alert tones when a node turns.</dd>
       </dl>
 
@@ -200,9 +205,10 @@
     </aside>
     <div class="tut-marker" id="tut-marker" aria-hidden="true" hidden>▼</div>
     <div class="beacons" id="beacons" aria-label="Threat markers"></div>
+    <div class="sr-only" id="announcer" aria-live="polite" aria-atomic="true"></div>
     <div class="hover-tip" id="hover-tip" role="tooltip" hidden></div>
 
-    <p class="hud hud-hint">Drag orbit · Right-drag pan · Scroll zoom · Click select · Double-click swoop · Space pause · M sound</p>
+    <p class="hud hud-hint">Drag orbit · Right-drag pan · Scroll zoom · Click select · Double-click swoop · N next threat · 1–4 actions · Space pause · M sound · C contrast</p>
 
     <script type="module" src="/src/main.js"></script>
   </body>

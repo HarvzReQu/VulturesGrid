@@ -4,7 +4,7 @@ import { STATES } from '../sim/states.js';
 // Pinpoints over the nodes that matter right now:
 //   incoming  crosshair on a node the rot is heading for (a pulse in flight, a flood aimed at it)
 //   leak      a node streaming data off the map
-//   rotting   crimson "!"      scented  amber "!"
+//   rotting   crimson "!"      scented  amber "?"
 // Pins for nodes off-screen stick to the screen edge with an arrow pointing toward them.
 // Clicking a pin calls onPick(nodeId). now() returns the current sim time.
 
@@ -12,7 +12,7 @@ const KINDS = {
   incoming: { icon: '◎', label: 'Incoming', rank: 4 },
   leak: { icon: '⇪', label: 'Leaking data', rank: 3 },
   rotting: { icon: '!', label: STATES.rotting.name, rank: 2 },
-  scented: { icon: '!', label: STATES.scented.name, rank: 1 },
+  scented: { icon: '?', label: STATES.scented.name, rank: 1 }, // shape differs from Rotting, not just color
 };
 const EDGE_PAD = 26;
 
@@ -187,5 +187,13 @@ export function createBeacons({ stage, nodes, topology, outsideId, now, onPick }
     }
   }
 
-  return { onVisual, clear, update };
+  // Everything currently pinned, most urgent first (used by keyboard navigation).
+  const PRIORITY = { rotting: 0, leak: 1, incoming: 2, scented: 3 };
+  function threats() {
+    return [...wanted(now())]
+      .map(([id, kind]) => ({ id, kind }))
+      .sort((a, b) => PRIORITY[a.kind] - PRIORITY[b.kind] || a.id.localeCompare(b.id));
+  }
+
+  return { onVisual, clear, update, threats };
 }

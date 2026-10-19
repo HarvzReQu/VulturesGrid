@@ -10,7 +10,8 @@ import { createSwoop } from './scene/swoop.js';
 import { createPicker } from './scene/picking.js';
 import { buildTopology } from './sim/topology.js';
 import { createEngine } from './sim/engine.js';
-import { HUNTS, TWIN, STAGES, pickHunt } from './sim/hunts.js';
+import { HUNTS, TWIN, ENDLESS, STAGES, pickHunt } from './sim/hunts.js';
+import { createEndless } from './sim/endless.js';
 import { addToRecord } from './sim/record.js';
 import { createRecordView } from './ui/recordView.js';
 import { createCues } from './audio/cues.js';
@@ -30,6 +31,8 @@ import { mountLogo } from './ui/logo.js';
 import { createSoundToggle } from './ui/soundToggle.js';
 import { createAmbience } from './audio/ambience.js';
 import { createTutorial } from './ui/tutorial.js';
+import { createContrast } from './ui/contrast.js';
+import { createKeyboard } from './ui/keyboard.js';
 import { createBeacons } from './ui/beacons.js';
 import { createGroundLabels } from './scene/labels.js';
 import { STATES } from './sim/states.js';
@@ -49,6 +52,7 @@ export function startApp(params) {
   const traceView = createTraceView(stage.scene, links);
   const swoop = createSwoop(stage);
   const engine = createEngine(topology);
+  const endless = createEndless(engine);
   createGroundLabels(stage.scene, topology);
   const replay = createReplay(topology.nodes.map((n) => n.id));
 
@@ -63,7 +67,7 @@ export function startApp(params) {
     id === 'daily' ? applyDifficulty(dailyRound()) : applyDifficulty(pickHunt(id), difficulty);
 
   const huntPanel = createHuntPanel({
-    hunts: [...HUNTS, TWIN],
+    hunts: [...HUNTS, TWIN, ENDLESS],
     onBegin: (id, difficulty) => engine.start(roundFor(id, difficulty)),
     onReset: () => engine.reset(),
   });
@@ -183,7 +187,7 @@ export function startApp(params) {
   // ---- Alert cues and the player's record --------------------------------------------
 
   const cues = createCues(() => ambience.cueOutput);
-  const recordView = createRecordView({ hunts: [...HUNTS, TWIN] });
+  const recordView = createRecordView({ hunts: [...HUNTS, TWIN, ENDLESS] });
   const panVec = new THREE.Vector3();
   // Pan a cue toward where its node is on screen.
   const panFor = (id) => {
@@ -194,9 +198,19 @@ export function startApp(params) {
   };
   const STATE_CUE = { scented: 'scent', rotting: 'rot', revived: 'revive' };
 
+  // Screen-reader announcements for the moments that matter (The Watch itself stays quiet).
+  const announcer = document.getElementById('announcer');
+  const announce = (text) => {
+    announcer.textContent = '';
+    requestAnimationFrame(() => (announcer.textContent = text));
+  };
+
   engine.on((e) => {
     if (!replay.active) {
-      if (e.type === 'state' && !e.quiet && STATE_CUE[e.state]) cues.play(STATE_CUE[e.state], panFor(e.id));
+      if (e.type === 'state' && !e.quiet && STATE_CUE[e.state]) {
+        cues.play(STATE_CUE[e.state], panFor(e.id));
+        if (e.state !== 'revived') announce(`${topology.byId.get(e.id).label} is ${e.state === 'rotting' ? 'rotting' : 'scented'}.`);
+      }
       if (e.type === 'action') cues.play(e.action === 'block' ? 'block' : 'act', e.id ? panFor(e.id) : 0);
     }
     if (replay.records(e.type)) {
@@ -214,8 +228,11 @@ export function startApp(params) {
         break;
       case 'start':
         document.getElementById('hunt-begin').classList.remove('is-nudging');
+        if (engine.hunt.endless) endless.start();
+        else endless.stop();
         break;
       case 'reset':
+        endless.stop();
         exitReplay();
         replay.clear();
         timeline.hide();
@@ -244,6 +261,7 @@ export function startApp(params) {
           if (newBest && previous) note = `New personal best on ${report.huntName} (${report.difficulty}): ${report.grade}, up from ${previous.grade}.`;
           recordView.refresh();
         }
+        announce(`Hunt over. ${report.outcome}. Grade ${report.grade}.`);
         reportTimer = setTimeout(() => {
           caseFile.show(report, note);
           setTimeout(() => cues.play(report.outcome === 'CONTAINED' ? 'stamp' : 'consumed'), 300); // as the stamp lands
@@ -307,6 +325,9 @@ export function startApp(params) {
 
   createPicker(stage, nodes, select, flyToNode, hover);
 
+  const contrast = createContrast({ stage, nodes, links });
+  createKeyboard({ topology, beacons, dossier, flyToNode, contrast, announce });
+
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') select(null);
   });
@@ -323,6 +344,7 @@ export function startApp(params) {
     time += dt;
     simTime += simDt;
     engine.update(simDt);
+    endless.update();
     stepReplay(simDt);
     pulses.update(simDt);
     vultures.update(simDt, simTime);
@@ -356,8 +378,8 @@ export function startApp(params) {
 
   stage.renderer.setAnimationLoop(() => {
     tick(Math.min(clock.getDelta(), 0.1));
-    killChain.update(replay.active ? replay.chainView : engine);
-    huntPanel.update(engine, replay.active ? replay.playhead : null);
+    killChain.update(replay.active ? replay.chainView : endless.active ? endless.chainView : engine);
+    huntPanel.update(engine, replay.active ? replay.playhead : null, endless.active ? endless.status() : null);
     timeline.update(replay.playhead, replay.playing, replay.active);
     const rotting = rotCount();
     logo.setThreat(rotting > 0);

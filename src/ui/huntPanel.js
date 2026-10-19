@@ -72,10 +72,12 @@ export function createHuntPanel({ hunts, onBegin, onReset }) {
   document.getElementById('hunt-reset').addEventListener('click', onReset);
 
   let last = '';
-  // replayAt: playhead time while replaying, otherwise null.
-  function update(engine, replayAt = null) {
+  // replayAt: playhead time while replaying, otherwise null. override: a ready-made status line.
+  function update(engine, replayAt = null, override = null) {
     let text = 'Quiet. Choose a Hunt and begin.';
-    if (replayAt !== null) {
+    if (override) {
+      text = override;
+    } else if (replayAt !== null) {
       text = `${engine.hunt.name} · Replay T+${replayAt.toFixed(1)}s`;
     } else if (engine.hunt) {
       const parts = [

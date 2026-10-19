@@ -17,6 +17,7 @@ export function createLinks(scene, topology, nodeIndex) {
   const isPicked = (id) => nodeIndex.get(id)?.state === 'picked';
   const LINE_OPACITY = { lan: 0.22, wan: 0.14, ext: 0.08 };
   const CUT_OPACITY = 0.04; // a link touching an isolated node goes dark
+  let lineBoost = 1; // high-contrast mode brightens the lines
 
   const links = [];
   const byId = new Map();
@@ -87,7 +88,7 @@ export function createLinks(scene, topology, nodeIndex) {
   function update(dt) {
     for (const link of links) {
       link.cut = isPicked(link.from) || isPicked(link.to);
-      link.line.material.opacity = link.cut ? CUT_OPACITY : LINE_OPACITY[link.kind];
+      link.line.material.opacity = link.cut ? CUT_OPACITY : Math.min(1, LINE_OPACITY[link.kind] * lineBoost);
     }
     particles.forEach((p, i) => {
       p.t += (p.dir * p.speed * dt) / p.link.length;
@@ -109,5 +110,5 @@ export function createLinks(scene, topology, nodeIndex) {
     geo.attributes.color.needsUpdate = true;
   }
 
-  return { links, byId, segmentsFor, update };
+  return { links, byId, segmentsFor, update, setContrast: (on) => (lineBoost = on ? 2.6 : 1) };
 }
