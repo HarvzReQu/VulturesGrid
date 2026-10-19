@@ -1642,9 +1642,32 @@ dialog::backdrop {
 }
 
 /* Tutorial */
+.panel-links {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.record-link {
+  padding: 0;
+  background: none;
+  border: 0;
+  font-family: var(--serif);
+  font-size: 15px;
+  font-style: italic;
+  color: var(--bone-dim);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.record-link:hover {
+  color: var(--bone);
+  text-decoration: underline;
+}
+
 .tutorial-link {
   display: block;
-  margin-top: 8px;
   padding: 0;
   background: none;
   border: 0;
@@ -1660,8 +1683,169 @@ dialog::backdrop {
   text-decoration: underline;
 }
 
-.is-training .tutorial-link {
-  display: none;
+.is-training .panel-links {
+  visibility: hidden;
+}
+
+/* Your record */
+.record-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 16px 0 0;
+}
+
+.record-stats div {
+  padding: 10px 12px;
+  border: 1px solid rgba(232, 226, 212, 0.15);
+}
+
+.record-stats dt {
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bone-dim);
+}
+
+.record-stats dd {
+  margin: 2px 0 0;
+  font-family: var(--mono);
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.record-grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.record-grid th,
+.record-grid td {
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(232, 226, 212, 0.08);
+  text-align: center;
+}
+
+.record-grid thead th {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--bone-dim);
+}
+
+.record-grid tbody th {
+  text-align: left;
+  font-weight: 700;
+}
+
+.record-grid .grade {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.record-grid .grade small {
+  margin-left: 5px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--bone-dim);
+}
+
+.record-grid .grade-A {
+  color: var(--bone);
+}
+
+.record-grid .grade-D,
+.record-grid .grade-F {
+  color: #e0392b;
+}
+
+.record-grid .empty,
+.record-grid .na {
+  color: rgba(232, 226, 212, 0.25);
+}
+
+.record-cases {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.record-cases li {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(232, 226, 212, 0.08);
+}
+
+.rc-grade {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 2px solid var(--bone);
+  border-radius: 50%;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.record-cases .is-consumed .rc-grade {
+  border-color: #c0392b;
+  color: #e0392b;
+}
+
+.rc-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.rc-main b {
+  font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rc-main em,
+.rc-date {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-style: normal;
+  color: var(--bone-dim);
+}
+
+.record-empty {
+  font-style: italic;
+  color: var(--bone-dim);
+}
+
+.record-clear {
+  margin-top: 16px;
+  padding: 0;
+  background: none;
+  border: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--bone-dim);
+  cursor: pointer;
+}
+
+.record-clear:hover {
+  color: #e0392b;
+}
+
+@media (max-width: 600px) {
+  .record-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .record-grid {
+    font-size: 13px;
+  }
 }
 
 select:disabled,

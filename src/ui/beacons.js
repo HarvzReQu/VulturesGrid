@@ -104,56 +104,86 @@ export function createBeacons({ stage, nodes, topology, outsideId, now, onPick }
     return pin;
   }
 
+  // Where a node's pin goes: on screen above the node, or clamped to the safe edge.
+  function place(id, frame) {
+    const entry = nodes.byId.get(id);
+    v.copy(entry.port).setY(entry.top + 1.1).project(stage.camera);
+    const behind = v.z > 1;
+    let x = (v.x * 0.5 + 0.5) * window.innerWidth;
+    let y = (-v.y * 0.5 + 0.5) * window.innerHeight;
+    if (behind) {
+      x = 2 * frame.cx - x;
+      y = 2 * frame.cy - y;
+    }
+    const dx = x - frame.cx;
+    const dy = y - frame.cy;
+    const overflow = Math.max(Math.abs(dx) / frame.halfW, Math.abs(dy) / frame.halfH);
+    const edge = behind || overflow > 1;
+    if (edge) {
+      const k = 1 / Math.max(overflow, 1e-6);
+      x = frame.cx + dx * k;
+      y = frame.cy + dy * k;
+    }
+    return { x, y, edge, angle: Math.atan2(dy, dx) };
+  }
+
   function update() {
     const want = wanted(now());
+    const rect = safeRect();
+    const frame = {
+      cx: (rect.left + rect.right) / 2,
+      cy: (rect.top + rect.bottom) / 2,
+      halfW: (rect.right - rect.left) / 2,
+      halfH: (rect.bottom - rect.top) / 2,
+    };
 
+    // Off-screen pins pointing at the same branch collapse into one, led by the most urgent.
+    const shown = [];
+    const edgeGroups = new Map();
+    for (const [id, kind] of want) {
+      const p = { id, kind, ...place(id, frame) };
+      if (!p.edge) {
+        shown.push(p);
+        continue;
+      }
+      const cluster = topology.byId.get(id).cluster;
+      const group = edgeGroups.get(cluster);
+      if (!group) edgeGroups.set(cluster, { lead: p, count: 1 });
+      else {
+        group.count++;
+        if (KINDS[kind].rank > KINDS[group.lead.kind].rank) group.lead = p;
+      }
+    }
+    for (const { lead, count } of edgeGroups.values()) shown.push({ ...lead, count });
+
+    const visible = new Set(shown.map((p) => p.id));
     for (const [id, pin] of pins) {
-      if (!want.has(id)) {
+      if (!visible.has(id)) {
         pin.remove();
         pins.delete(id);
       }
     }
-    if (!want.size) return;
 
-    const rect = safeRect();
-    const cx = (rect.left + rect.right) / 2;
-    const cy = (rect.top + rect.bottom) / 2;
-    const halfW = (rect.right - rect.left) / 2;
-    const halfH = (rect.bottom - rect.top) / 2;
-
-    for (const [id, kind] of want) {
-      const entry = nodes.byId.get(id);
-      const pin = pinFor(id);
-      if (pin.dataset.kind !== kind) {
-        pin.dataset.kind = kind;
-        pin.querySelector('.beacon-glyph').textContent = KINDS[kind].icon;
-        pin.querySelector('.beacon-label').textContent = `${KINDS[kind].label} · ${topology.byId.get(id).hostname}`;
-        pin.setAttribute('aria-label', `${KINDS[kind].label}: ${topology.byId.get(id).label}`);
+    for (const p of shown) {
+      const node = topology.byId.get(p.id);
+      const pin = pinFor(p.id);
+      const label =
+        p.count > 1
+          ? `${KINDS[p.kind].label} ×${p.count} · ${node.site}`
+          : `${KINDS[p.kind].label} · ${node.hostname}`;
+      if (pin.dataset.label !== label) {
+        pin.dataset.label = label;
+        pin.dataset.kind = p.kind;
+        pin.querySelector('.beacon-glyph').textContent = KINDS[p.kind].icon;
+        pin.querySelector('.beacon-label').textContent = label;
+        pin.setAttribute('aria-label', p.count > 1 ? label : `${KINDS[p.kind].label}: ${node.label}`);
       }
-
-      v.copy(entry.port).setY(entry.top + 1.1).project(stage.camera);
-      const behind = v.z > 1;
-      let x = (v.x * 0.5 + 0.5) * window.innerWidth;
-      let y = (-v.y * 0.5 + 0.5) * window.innerHeight;
-      if (behind) {
-        x = 2 * cx - x;
-        y = 2 * cy - y;
-      }
-      const dx = x - cx;
-      const dy = y - cy;
-      const overflow = Math.max(Math.abs(dx) / halfW, Math.abs(dy) / halfH);
-      const edge = behind || overflow > 1;
-      if (edge) {
-        const k = 1 / Math.max(overflow, 1e-6);
-        x = cx + dx * k;
-        y = cy + dy * k;
-        pin.querySelector('.beacon-arrow').style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
-      }
+      if (p.edge) pin.querySelector('.beacon-arrow').style.transform = `rotate(${p.angle}rad)`;
       // On the right half, the label goes to the left of the pin so it stays on screen.
-      const right = x > cx;
-      pin.classList.toggle('is-edge', edge);
+      const right = p.x > frame.cx;
+      pin.classList.toggle('is-edge', p.edge);
       pin.classList.toggle('is-right', right);
-      pin.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)${right ? ' translateX(calc(-100% + 26px))' : ''}`;
+      pin.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px)${right ? ' translateX(calc(-100% + 26px))' : ''}`;
     }
   }
 

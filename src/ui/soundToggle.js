@@ -5,8 +5,8 @@ export function createSoundToggle(ambience) {
   const sync = () => {
     const on = ambience.enabled;
     button.setAttribute('aria-pressed', String(on));
-    button.setAttribute('aria-label', on ? 'Mute ambient sound' : 'Play ambient sound');
-    button.title = on ? 'Ambient sound on (M)' : 'Ambient sound off (M)';
+    button.setAttribute('aria-label', on ? 'Turn sound off' : 'Turn sound on');
+    button.title = on ? 'Sound on: ambience and alerts (M)' : 'Sound off (M)';
   };
 
   const toggle = () => {

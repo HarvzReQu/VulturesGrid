@@ -10,7 +10,10 @@ import { createSwoop } from './scene/swoop.js';
 import { createPicker } from './scene/picking.js';
 import { buildTopology } from './sim/topology.js';
 import { createEngine } from './sim/engine.js';
-import { HUNTS, STAGES, pickHunt } from './sim/hunts.js';
+import { HUNTS, TWIN, STAGES, pickHunt } from './sim/hunts.js';
+import { addToRecord } from './sim/record.js';
+import { createRecordView } from './ui/recordView.js';
+import { createCues } from './audio/cues.js';
 import { createReplay } from './sim/replay.js';
 import { buildReport } from './sim/scoring.js';
 import { applyDifficulty } from './sim/difficulty.js';
@@ -60,7 +63,7 @@ export function startApp(params) {
     id === 'daily' ? applyDifficulty(dailyRound()) : applyDifficulty(pickHunt(id), difficulty);
 
   const huntPanel = createHuntPanel({
-    hunts: HUNTS,
+    hunts: [...HUNTS, TWIN],
     onBegin: (id, difficulty) => engine.start(roundFor(id, difficulty)),
     onReset: () => engine.reset(),
   });
@@ -177,7 +180,25 @@ export function startApp(params) {
 
   let reportTimer = null;
 
+  // ---- Alert cues and the player's record --------------------------------------------
+
+  const cues = createCues(() => ambience.cueOutput);
+  const recordView = createRecordView({ hunts: [...HUNTS, TWIN] });
+  const panVec = new THREE.Vector3();
+  // Pan a cue toward where its node is on screen.
+  const panFor = (id) => {
+    const entry = nodes.byId.get(id);
+    if (!entry) return 0;
+    panVec.copy(entry.port).project(stage.camera);
+    return panVec.z > 1 ? 0 : panVec.x;
+  };
+  const STATE_CUE = { scented: 'scent', rotting: 'rot', revived: 'revive' };
+
   engine.on((e) => {
+    if (!replay.active) {
+      if (e.type === 'state' && !e.quiet && STATE_CUE[e.state]) cues.play(STATE_CUE[e.state], panFor(e.id));
+      if (e.type === 'action') cues.play(e.action === 'block' ? 'block' : 'act', e.id ? panFor(e.id) : 0);
+    }
     if (replay.records(e.type)) {
       if (engine.hunt) replay.record(e, engine.time);
       if (!replay.active) playVisual(e);
@@ -215,10 +236,18 @@ export function startApp(params) {
           saveDailyBest(report.daily.key, { grade: report.grade, score: report.score });
           huntPanel.refresh();
         }
-        const note = tutorial.active
-        ? 'Training complete. You are ready: pick a Hunt at the top right and press Begin.'
-        : null;
-      reportTimer = setTimeout(() => caseFile.show(report, note), REPORT_DELAY_MS);
+        let note = null;
+        if (tutorial.active) {
+          note = 'Training complete. You are ready: pick a Hunt at the top right and press Begin.';
+        } else {
+          const { newBest, previous } = addToRecord(report);
+          if (newBest && previous) note = `New personal best on ${report.huntName} (${report.difficulty}): ${report.grade}, up from ${previous.grade}.`;
+          recordView.refresh();
+        }
+        reportTimer = setTimeout(() => {
+          caseFile.show(report, note);
+          setTimeout(() => cues.play(report.outcome === 'CONTAINED' ? 'stamp' : 'consumed'), 300); // as the stamp lands
+        }, REPORT_DELAY_MS);
         break;
       }
     }

@@ -71,7 +71,12 @@ It is a visual game only. There is no real networking, scanning or security tool
   - a timeline and a list of actions taken
 - **Replay:** after a round, scrub the timeline to any moment and watch it play back.
 - **Share result:** post your grade straight from the Case File, using the phone share sheet or a clipboard copy.
-- **Ambient sound** (off by default; speaker button or `M`): wind gusts, a low rumble, and distant wingbeats that come more often as the rot spreads. It's all generated live with the Web Audio API, with no audio files.
+- **Sound** (off by default; speaker button or `M`):
+  - Ambience: wind gusts, a low rumble, and distant wingbeats that come more often as the rot spreads.
+  - Alert cues, panned toward the node on screen: a two-note chime when a node turns Scented, a low toll when one rots, a shimmer on Revived, clicks for your actions, and a stamp when the Case File lands.
+  - It's all generated live with the Web Audio API, with no audio files.
+- **Twin Hunt:** two different Hunts at once, the second a few seconds behind the first. Containing one earns the **Two Fronts** mark.
+- **Your record:** every case you close, kept in your browser. It shows rounds played, containment rate, A grades and your current streak, plus your best grade for every Hunt at every difficulty and your recent cases. The Case File flags a new personal best.
 - **Interactive tutorial:** a guided Training Hunt that walks you through spotting a Scented node, opening its dossier, Isolate, Restore, Trace and Block, then The Watch, speed controls and your first Case File. The Hunt waits at each lesson until you've done the step. It's offered on the first visit and in the Hunt panel, and `?tutorial` opens it directly.
 - **Polish:**
   - a loading screen where the skull emblem fades in and the tagline types itself out

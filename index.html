@@ -79,7 +79,10 @@
         </div>
         <p class="difficulty-note" id="difficulty-note"></p>
         <p class="hunt-blurb" id="hunt-blurb"></p>
-        <button class="tutorial-link" id="tutorial-open">New here? Play the 2-minute tutorial →</button>
+        <div class="panel-links">
+          <button class="tutorial-link" id="tutorial-open">New here? Play the tutorial →</button>
+          <button class="record-link" id="record-open">Your record →</button>
+        </div>
         <p class="hunt-status" id="hunt-status"></p>
       </section>
 
@@ -128,6 +131,14 @@
       <article class="cf-body"></article>
     </dialog>
 
+    <dialog class="help record" id="record" aria-labelledby="record-title">
+      <button class="help-close" data-close aria-label="Close">×</button>
+      <h2 id="record-title">Your record</h2>
+      <p class="help-lede">Every case you've closed in this browser.</p>
+      <div class="record-body"></div>
+      <button class="record-clear" data-clear hidden>Clear record</button>
+    </dialog>
+
     <dialog class="help" id="help" aria-labelledby="help-title">
       <button class="help-close" data-close aria-label="Close">×</button>
       <h2 id="help-title">How to Hunt</h2>
@@ -168,7 +179,7 @@
         <dt>Touch</dt><dd>One finger to orbit, two to zoom and pan.</dd>
         <dt>Double-click</dt><dd>Swoop down onto a node.</dd>
         <dt>Space / Esc</dt><dd>Pause / close the dossier.</dd>
-        <dt>M</dt><dd>Ambient sound on or off: wind and distant wings (off by default).</dd>
+        <dt>M</dt><dd>Sound on or off (off by default): wind, distant wings, and alert tones when a node turns.</dd>
       </dl>
 
       <div class="help-choices">

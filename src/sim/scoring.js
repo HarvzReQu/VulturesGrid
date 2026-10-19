@@ -42,6 +42,8 @@ const ACTION_PHRASE = {
 };
 
 const fmtSeconds = (s) => `${s.toFixed(1)}s`;
+// True if the round is (or, for a Twin Hunt, includes) the given Hunt.
+const huntHas = (hunt, id) => hunt.id === id || Boolean(hunt.parts?.includes(id));
 const clock = (s) => {
   const t = Math.max(0, Math.floor(s));
   return `T+${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
@@ -121,6 +123,7 @@ function earnMarks(s, r, outcome, hostOf) {
   const marks = [];
   const add = (name, detail) => marks.push({ name, detail });
   if (outcome === 'CONTAINED' && s.hunt.difficulty === 'carrion') add('Crowned', 'Contained on Carrion King');
+  if (outcome === 'CONTAINED' && s.hunt.parts) add('Two Fronts', 'Held off two Hunts at once');
   if (!s.nodesLost.length) add('Clean Bones', 'Not a single node rotted');
   if (s.firstResponse !== null && s.firstResponse <= 3) add('Quick Talons', `Acted ${fmtSeconds(s.firstResponse)} after the first alert`);
   if (r.blocked && r.firstRotTime !== null && r.blockAt > r.firstRotTime && outcome === 'CONTAINED')
@@ -128,8 +131,8 @@ function earnMarks(s, r, outcome, hostOf) {
   else if (r.blocked && (r.firstRotTime === null || r.blockAt <= r.firstRotTime)) add('Iron Gate', 'Blocked the source before anything fell');
   if (r.traces) add('Patient Zero', 'Traced the rot back toward its source');
   if (r.crownFell === false) add('Crown Intact', `${hostOf(s.hunt.crown)} never fell`);
-  if (s.hunt.id === 'bleed' && s.dataLostMB < 1) add('Vault Sealed', 'Nothing left the grid');
-  if (s.hunt.id === 'rot' && r.sitesHit && r.sitesHit <= 2) add('Firebreak', `Rot held to ${r.sitesHit} branch${r.sitesHit === 1 ? '' : 'es'}`);
+  if (huntHas(s.hunt, 'bleed') && s.dataLostMB < 1) add('Vault Sealed', 'Nothing left the grid');
+  if (huntHas(s.hunt, 'rot') && r.sitesHit && r.sitesHit <= 2) add('Firebreak', `Rot held to ${r.sitesHit} branch${r.sitesHit === 1 ? '' : 'es'}`);
   if (r.nearMisses.length >= 2) add('Close Calls', `${r.nearMisses.length} nodes caught while still Scented`);
   if (outcome === 'CONTAINED' && s.actions.length && s.actions.length <= 2) add('Light Touch', `Contained in ${s.actions.length} move${s.actions.length === 1 ? '' : 's'}`);
   if (r.lastSeconds && outcome === 'CONTAINED') add('Last Light', `Red cleared at ${clock(s.clearedAt)}, just before the end`);
@@ -204,7 +207,7 @@ function writeSummary(s, r, outcome, grade, hostOf, siteOf, rand) {
   if (r.crownFell === true) lines.push(say(`${hostOf(s.hunt.crown)}, the prize, fell.`, `They reached ${hostOf(s.hunt.crown)}.`));
   if (r.crownFell === false && s.nodesLost.length) lines.push(`${hostOf(s.hunt.crown)} was kept out of reach.`);
   if (s.dataLostMB > 0.05) lines.push(`${s.dataLostMB.toFixed(1)} MB bled out to ${s.outsideIp}.`);
-  else if (s.hunt.id === 'bleed') lines.push('Nothing left the grid.');
+  else if (huntHas(s.hunt, 'bleed')) lines.push('Nothing left the grid.');
 
   const VERDICT = {
     CONTAINED: {
@@ -250,6 +253,8 @@ export function buildReport(s, topology, now = new Date()) {
     caseNumber,
     date: now.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }),
     huntName: s.hunt.name,
+    huntId: s.hunt.id,
+    difficultyKey: s.hunt.difficulty ?? 'vulture',
     difficulty: DIFFICULTIES[s.hunt.difficulty ?? 'vulture'].name,
     daily: s.hunt.daily ?? null,
     outsideIp: r.outsideHunt ? s.outsideIp : null, // only meaningful when the Hunt involves the outside

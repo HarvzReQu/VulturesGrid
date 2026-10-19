@@ -26,6 +26,7 @@ const rand = (min, max) => min + Math.random() * (max - min);
 export function createAmbience() {
   let ctx = null;
   let master = null;
+  let cueBus = null; // alert cues are mixed in here, under the same master fade
   let white = null;
   let enabled = false;
   let threat = 0;
@@ -118,6 +119,9 @@ export function createAmbience() {
     master = ctx.createGain();
     master.gain.value = 0;
     master.connect(ctx.destination);
+    cueBus = ctx.createGain();
+    cueBus.gain.value = 1.4; // cues sit above the bed
+    cueBus.connect(master);
     white = noiseBuffer(ctx, 4);
     windLayer(-0.6);
     windLayer(0.6);
@@ -153,6 +157,10 @@ export function createAmbience() {
     },
     get enabled() {
       return enabled;
+    },
+    // Where alert cues play, or null while sound is off.
+    get cueOutput() {
+      return enabled && ctx?.state === 'running' ? { ctx, out: cueBus, noise: white } : null;
     },
   };
 }

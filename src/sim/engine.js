@@ -77,7 +77,7 @@ export function createEngine(topology) {
     if (prev === next) return;
     state.set(id, next);
     if (hunt) trackContainment(id, next);
-    emit({ type: 'state', id, state: next, prev });
+    emit({ type: 'state', id, state: next, prev, quiet }); // quiet: housekeeping (reset), not news
     if (!quiet && STATE_LOG[next]) {
       const [level, text] = STATE_LOG[next];
       record(level, text(host(id)), id);

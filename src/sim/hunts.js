@@ -153,6 +153,42 @@ export const HUNTS = [
   },
 ];
 
+const TWIN_OFFSET = 5; // seconds before the second attack begins
+
+// Twin Hunt: two different Hunts at once, the second a few seconds behind the first.
+// The kill chain only ever moves forward, so a later "Initial Access" doesn't rewind it.
+export const TWIN = {
+  id: 'twin',
+  name: 'Twin Hunt',
+  blurb: 'Two different Hunts at once, the second a few seconds behind the first. Choose what to save.',
+  duration: 0, // set by build
+  build(rand) {
+    const [a, b] = [...HUNTS].sort(() => rand() - 0.5);
+    const ra = a.build(rand);
+    const rb = b.build(rand);
+    let maxStage = -1;
+    const steps = [...ra.steps, ...rb.steps.map((s) => ({ ...s, at: s.at + TWIN_OFFSET }))]
+      .sort((x, y) => x.at - y.at)
+      .map((s) => {
+        if (s.stage === undefined) return s;
+        if (s.stage <= maxStage) {
+          const { stage, ...rest } = s;
+          return rest;
+        }
+        maxStage = s.stage;
+        return s;
+      });
+    return {
+      name: `Twin Hunt: ${a.name} + ${b.name}`,
+      baseName: 'The Twin Hunt',
+      parts: [a.id, b.id],
+      duration: Math.max(a.duration, b.duration + TWIN_OFFSET),
+      crown: ra.crown ?? rb.crown,
+      steps,
+    };
+  },
+};
+
 // The guided tutorial's round. Not in the dropdown; the tutorial holds the timeline
 // between lessons, so these times only set the order of events.
 export const TRAINING = {
@@ -177,6 +213,6 @@ export const TRAINING = {
 
 // Returns a playable round: the Hunt's definition plus this round's freshly built steps.
 export function pickHunt(id, rand = Math.random) {
-  const def = id === 'random' ? pick(rand, HUNTS) : (HUNTS.find((h) => h.id === id) ?? HUNTS[0]);
+  const def = id === 'random' ? pick(rand, HUNTS) : ([...HUNTS, TWIN].find((h) => h.id === id) ?? HUNTS[0]);
   return { ...def, ...def.build(rand) };
 }
