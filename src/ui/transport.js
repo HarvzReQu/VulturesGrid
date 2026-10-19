@@ -36,6 +36,11 @@ export function createTransport() {
 
   sync();
   return {
+    setSpeed(value) {
+      speed = value;
+      paused = false;
+      sync();
+    },
     get scale() {
       return paused ? 0 : speed;
     },

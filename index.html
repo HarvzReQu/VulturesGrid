@@ -73,6 +73,7 @@
           <button id="hunt-reset" class="btn">Reset</button>
         </div>
         <p class="hunt-blurb" id="hunt-blurb"></p>
+        <button class="tutorial-link" id="tutorial-open">New here? Play the 2-minute tutorial →</button>
         <p class="hunt-status" id="hunt-status"></p>
       </section>
 
@@ -164,9 +165,23 @@
         <dt>M</dt><dd>Ambient sound on or off: wind and distant wings (off by default).</dd>
       </dl>
 
-      <button class="btn btn-primary help-go" data-close>Begin the watch</button>
+      <div class="help-choices">
+        <button class="btn btn-primary" data-tutorial>Play the tutorial (2 min)</button>
+        <button class="btn" data-close>Explore on my own</button>
+      </div>
       <p class="help-foot">VulturesGrid by The Vultures. Educational game, all activity simulated.</p>
     </dialog>
+
+    <aside class="coach" id="coach" aria-live="polite" hidden>
+      <p class="coach-step"></p>
+      <h2 class="coach-title"></h2>
+      <p class="coach-body"></p>
+      <div class="coach-actions">
+        <button class="coach-skip">Skip tutorial</button>
+        <button class="btn btn-primary coach-next"></button>
+      </div>
+    </aside>
+    <div class="tut-marker" id="tut-marker" aria-hidden="true" hidden>▼</div>
 
     <p class="hud hud-hint">Drag orbit · Right-drag pan · Scroll zoom · Click select · Double-click swoop · Space pause · M sound</p>
 

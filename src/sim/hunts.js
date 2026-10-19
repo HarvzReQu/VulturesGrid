@@ -153,6 +153,28 @@ export const HUNTS = [
   },
 ];
 
+// The guided tutorial's round. Not in the dropdown; the tutorial holds the timeline
+// between lessons, so these times only set the order of events.
+export const TRAINING = {
+  id: 'training',
+  name: 'Training Hunt',
+  blurb: 'A guided first watch.',
+  duration: 24,
+  build: () => ({
+    crown: 'hq-web',
+    steps: [
+      { at: 0.5, stage: 0, do: 'scent', node: 'ashford-ws1' },
+      { at: 4, do: 'rot', node: 'ashford-ws1' },
+      { at: 6, stage: 1, do: 'spread', from: 'ashford-ws1', to: 'ashford-rtr' }, // fizzles once isolated
+      { at: 9, stage: 2, do: 'stream', id: 'siege', path: [OUTSIDE_ID, 'hq-fw', 'hq-web'], rate: 10 },
+      { at: 11, do: 'scent', node: 'hq-web', requires: 'siege' },
+      { at: 14, do: 'rot', node: 'hq-web', requires: 'siege' },
+      { at: 16, stage: 3, do: 'spread', from: 'hq-web', to: 'hq-db' }, // fizzles once restored
+      { at: 22, do: 'stream-stop', id: 'siege' },
+    ],
+  }),
+};
+
 // Returns a playable round: the Hunt's definition plus this round's freshly built steps.
 export function pickHunt(id, rand = Math.random) {
   const def = id === 'random' ? pick(rand, HUNTS) : (HUNTS.find((h) => h.id === id) ?? HUNTS[0]);

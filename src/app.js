@@ -24,6 +24,7 @@ import { createHelp } from './ui/help.js';
 import { mountLogo } from './ui/logo.js';
 import { createSoundToggle } from './ui/soundToggle.js';
 import { createAmbience } from './audio/ambience.js';
+import { createTutorial } from './ui/tutorial.js';
 
 const REPORT_DELAY_MS = 1600; // let the final state sink in before the Case File lands
 
@@ -45,7 +46,7 @@ export function startApp(params) {
   const logo = mountLogo();
   const ambience = createAmbience();
   createSoundToggle(ambience);
-  const help = createHelp();
+  const help = createHelp({ onTutorial: () => tutorial.start() });
   const killChain = createKillChain(document.getElementById('killchain'), STAGES);
   const transport = createTransport();
   const huntPanel = createHuntPanel({
@@ -136,6 +137,7 @@ export function startApp(params) {
     topology,
     viewState: (id) => nodes.byId.get(id).state,
     isLocked: () => replay.active,
+    isAllowed: (action) => tutorial.allows(action),
     onClose: () => select(null),
     onAction: (action, id) => {
       if (action === 'isolate') engine.isolate(id);
@@ -193,11 +195,37 @@ export function startApp(params) {
         replay.finish(engine.time);
         timeline.show(replay.duration);
         const report = buildReport(engine.summary(), topology);
-        reportTimer = setTimeout(() => caseFile.show(report), REPORT_DELAY_MS);
+        const note = tutorial.active
+        ? 'Training complete. You are ready: pick a Hunt at the top right and press Begin.'
+        : null;
+      reportTimer = setTimeout(() => caseFile.show(report, note), REPORT_DELAY_MS);
         break;
       }
     }
   });
+
+  // ---- Tutorial -----------------------------------------------------------------
+
+  const beginBtn = document.getElementById('hunt-begin');
+  const tutorial = createTutorial({
+    engine,
+    nodes,
+    stage,
+    transport,
+    dossier,
+    select,
+    flyTo: (id) => swoop.flyTo(nodes.byId.get(id).port),
+    caseFileOpen: () => document.getElementById('casefile').open,
+    setTraining(on) {
+      document.body.classList.toggle('is-training', on);
+      for (const id of ['hunt-begin', 'hunt-reset', 'hunt-select']) document.getElementById(id).disabled = on;
+    },
+    onFinish(completed) {
+      beginBtn.classList.add('is-nudging');
+      if (!completed) select(null);
+    },
+  });
+  document.getElementById('tutorial-open').addEventListener('click', () => tutorial.start());
 
   createPicker(stage, nodes, select, (id) => {
     select(id);
@@ -259,9 +287,13 @@ export function startApp(params) {
     logo.setThreat(rotting > 0);
     ambience.setThreat(rotting);
     dossier.tick();
+    tutorial.update();
     if (stage.controls.enabled) stage.controls.update();
     stage.render();
   });
 
-  return { showHelpIfFirstVisit: () => help.showIfFirstVisit() };
+  return {
+    showHelpIfFirstVisit: () => help.showIfFirstVisit(),
+    startTutorial: () => tutorial.start(),
+  };
 }

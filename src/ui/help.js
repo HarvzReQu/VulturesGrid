@@ -17,7 +17,7 @@ function markSeen() {
 }
 
 // "How to Hunt" modal: shown automatically on the first visit, reopened with the ? button.
-export function createHelp() {
+export function createHelp({ onTutorial }) {
   const dialog = document.getElementById('help');
   const open = () => {
     if (!dialog.open) dialog.showModal();
@@ -31,6 +31,10 @@ export function createHelp() {
   });
   dialog.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', () => dialog.close()));
   document.getElementById('help-open').addEventListener('click', open);
+  dialog.querySelector('[data-tutorial]').addEventListener('click', () => {
+    dialog.close();
+    onTutorial();
+  });
 
   return {
     showIfFirstVisit() {

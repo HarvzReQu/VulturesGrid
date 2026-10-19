@@ -49,6 +49,7 @@ export function createEngine(topology) {
   let dataLostMB = 0;
   let blocked = false;
   let outsideIp = '';
+  let holdAt = null; // tutorial: Hunt time at which the timeline waits (timers keep running)
 
   // Round stats for the Case File.
   let firstAlertAt = null;
@@ -230,7 +231,8 @@ export function createEngine(topology) {
     }
 
     if (!running) return;
-    time += dt;
+    if (holdAt !== null && time >= holdAt) return; // held: nothing new happens until released
+    time = holdAt !== null ? Math.min(time + dt, holdAt) : time + dt;
     const steps = hunt.steps;
     while (cursor < steps.length && steps[cursor].at <= time) runStep(steps[cursor++]);
 
@@ -358,6 +360,7 @@ export function createEngine(topology) {
     blocked = false;
     readyAt = {};
     log = [];
+    holdAt = null;
     firstAlertAt = null;
     firstActionAt = null;
     clearedAt = null;
@@ -415,6 +418,10 @@ export function createEngine(topology) {
     stageProgress,
     countState,
     summary,
+    // Tutorial controls: stop the timeline at a Hunt time, let it go, and refresh cooldowns.
+    holdAt: (t) => (holdAt = t),
+    releaseHold: () => (holdAt = null),
+    clearCooldowns: () => (readyAt = {}),
     isolate,
     block,
     restore,
@@ -435,6 +442,9 @@ export function createEngine(topology) {
     },
     get finished() {
       return finished;
+    },
+    get held() {
+      return holdAt !== null && time >= holdAt;
     },
     get stageIndex() {
       return stageIndex;

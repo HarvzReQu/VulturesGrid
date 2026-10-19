@@ -56,6 +56,7 @@ It is a visual game only. There is no real networking, scanning or security tool
 - **Replay:** after a round, scrub the timeline to any moment and watch it play back.
 - **Share result:** post your grade straight from the Case File, using the phone share sheet or a clipboard copy.
 - **Ambient sound** (off by default; speaker button or `M`): wind gusts, a low rumble, and distant wingbeats that come more often as the rot spreads. It's all generated live with the Web Audio API, with no audio files.
+- **Interactive tutorial:** a guided Training Hunt that walks you through spotting a Scented node, opening its dossier, Isolate, Restore, Trace and Block, then The Watch, speed controls and your first Case File. The Hunt waits at each lesson until you've done the step. It's offered on the first visit and in the Hunt panel, and `?tutorial` opens it directly.
 - **Polish:**
   - a loading screen where the skull emblem fades in and the tagline types itself out
   - a **How to Hunt** guide on first visit
@@ -85,6 +86,7 @@ Handy deep links for development or sharing:
 - `?hunt=bleed` starts a Hunt immediately. Use `lure`, `rot`, `siege`, `bleed` or `random`.
 - `&skip=15` fast-forwards that many seconds.
 - `&focus=hq-db` frames a node and opens its dossier.
+- `?tutorial` jumps straight into the guided Training Hunt.
 
 ## Deploying to Vercel
 

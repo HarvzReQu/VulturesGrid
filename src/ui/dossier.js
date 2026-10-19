@@ -11,8 +11,9 @@ const ACTIONS = [
 
 // Case-file side panel for the selected node: details, recent events and the four actions.
 // viewState(id) is the state currently on screen (differs from the engine during replay);
-// isLocked() disables the actions while replaying.
-export function createDossier({ engine, topology, viewState, isLocked, onAction, onClose }) {
+// isLocked() disables the actions while replaying; isAllowed(action) lets the tutorial
+// enable one action at a time.
+export function createDossier({ engine, topology, viewState, isLocked, isAllowed, onAction, onClose }) {
   const el = document.getElementById('dossier');
   const body = el.querySelector('.dossier-body');
   let nodeId = null;
@@ -97,7 +98,7 @@ export function createDossier({ engine, topology, viewState, isLocked, onAction,
       } else if (a.id === 'trace') {
         available = engine.canTrace(nodeId) && remaining === 0;
       }
-      if (locked) available = false;
+      if (locked || !isAllowed(a.id)) available = false;
       const cooling = remaining > 0 && !(a.id === 'isolate' && state === 'picked');
       const key = `${name}|${available}|${cooling ? remaining.toFixed(1) : ''}`;
       if (buttonState.get(a.id) === key) continue;

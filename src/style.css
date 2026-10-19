@@ -316,6 +316,8 @@ select,
 
 @media (prefers-reduced-motion: reduce) {
   .btn-primary.is-nudging,
+  .tut-marker,
+  .tut-focus,
   .logo.is-threat,
   .kc-seg.active .kc-bone {
     animation: none;
@@ -1078,11 +1080,16 @@ dialog::backdrop {
   cursor: pointer;
 }
 
-.help-go {
+.help-choices {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 8px;
   margin-top: 22px;
-  width: 100%;
+}
+
+.help-choices .btn {
   padding: 10px;
-  font-size: 18px;
+  font-size: 17px;
 }
 
 .help-foot {
@@ -1396,6 +1403,156 @@ dialog::backdrop {
   font-weight: 700;
 }
 
+/* Tutorial */
+.tutorial-link {
+  display: block;
+  margin-top: 8px;
+  padding: 0;
+  background: none;
+  border: 0;
+  font-family: var(--serif);
+  font-size: 15px;
+  font-style: italic;
+  color: var(--amber);
+  cursor: pointer;
+  text-align: left;
+}
+
+.tutorial-link:hover {
+  text-decoration: underline;
+}
+
+.is-training .tutorial-link {
+  display: none;
+}
+
+select:disabled,
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.coach {
+  position: fixed;
+  top: 92px;
+  left: 50%;
+  z-index: 6;
+  width: min(440px, calc(100vw - 32px));
+  transform: translateX(-50%);
+  padding: 16px 18px 14px;
+  background: rgba(18, 17, 16, 0.96);
+  border: 1px solid var(--amber);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6), 0 0 0 4px rgba(200, 144, 46, 0.12);
+}
+
+.coach[hidden] {
+  display: none;
+}
+
+.coach.coach-pop {
+  animation: coach-in 0.35s ease-out;
+}
+
+@keyframes coach-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+}
+
+.coach-step {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+
+.coach-title {
+  margin: 4px 0 4px;
+  font-size: 24px;
+  line-height: 1.15;
+}
+
+.coach-body {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.4;
+  color: rgba(232, 226, 212, 0.86);
+}
+
+.coach-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.coach-skip {
+  padding: 0;
+  background: none;
+  border: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--bone-dim);
+  cursor: pointer;
+}
+
+.coach-skip:hover {
+  color: var(--bone);
+}
+
+.coach-next[hidden] {
+  display: none;
+}
+
+/* Bouncing arrow over the node the lesson is about */
+.tut-marker {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 4;
+  margin: -34px 0 0 -11px;
+  font-size: 22px;
+  color: var(--amber);
+  text-shadow: 0 0 10px rgba(200, 144, 46, 0.8);
+  pointer-events: none;
+  animation: marker-bob 0.9s ease-in-out infinite;
+}
+
+.tut-marker[hidden] {
+  display: none;
+}
+
+@keyframes marker-bob {
+  50% {
+    margin-top: -26px;
+  }
+}
+
+/* The control the current lesson wants you to use */
+.tut-focus {
+  outline: 2px solid var(--amber) !important;
+  outline-offset: 3px;
+  animation: focus-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes focus-pulse {
+  50% {
+    outline-color: rgba(200, 144, 46, 0.35);
+  }
+}
+
+.cf-note {
+  margin: 0 0 18px;
+  padding: 10px 14px;
+  border: 1px dashed var(--ink);
+  font-size: 17px;
+  font-style: italic;
+  text-align: center;
+}
+
 @media (max-width: 1180px) {
   .hud-hint {
     display: none;
@@ -1505,6 +1662,15 @@ dialog::backdrop {
   }
   .cf-grade span {
     font-size: 44px;
+  }
+  .coach {
+    top: 172px;
+  }
+  .coach-title {
+    font-size: 20px;
+  }
+  .coach-body {
+    font-size: 15px;
   }
   .dossier {
     top: auto;

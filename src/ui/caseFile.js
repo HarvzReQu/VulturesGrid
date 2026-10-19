@@ -71,10 +71,12 @@ export function createCaseFile({ onReplay, onNewHunt }) {
     }
   });
 
-  function show(r) {
+  // note: optional line shown above the file (used when the tutorial ends).
+  function show(r, note = null) {
     report = r;
     const outcomeClass = r.outcome === 'CONTAINED' ? 'is-contained' : 'is-consumed';
     body.innerHTML = `
+      ${note ? `<p class="cf-note">${escapeHtml(note)}</p>` : ''}
       <header class="cf-head">
         <p class="cf-org">The Vultures · Incident Division</p>
         <h2 class="cf-title" id="cf-title">Case File</h2>
