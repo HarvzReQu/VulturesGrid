@@ -303,6 +303,54 @@ select,
   background: #fff;
 }
 
+/* Begin glows until the first Hunt starts, so first-time visitors know where to go */
+.btn-primary.is-nudging {
+  animation: nudge 2.2s ease-in-out infinite;
+}
+
+@keyframes nudge {
+  50% {
+    box-shadow: 0 0 0 4px rgba(232, 226, 212, 0.18), 0 0 18px rgba(232, 226, 212, 0.45);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary.is-nudging,
+  .logo.is-threat,
+  .kc-seg.active .kc-bone {
+    animation: none;
+  }
+}
+
+/* No WebGL: everything but the message is hidden */
+.no-webgl .sidebar,
+.no-webgl .killchain,
+.no-webgl .transport,
+.no-webgl .hud-hint,
+.no-webgl .help-open,
+.no-webgl .sound-toggle {
+  display: none;
+}
+
+.unsupported {
+  max-width: 460px;
+  margin: 30vh auto 0;
+  padding: 0 24px;
+  text-align: center;
+}
+
+.unsupported h2 {
+  margin: 0 0 10px;
+  font-size: 30px;
+}
+
+.unsupported p {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.45;
+  color: var(--bone-dim);
+}
+
 :focus-visible {
   outline: 1px solid var(--amber);
   outline-offset: 2px;
@@ -1248,6 +1296,7 @@ dialog::backdrop {
 
 .cf-actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 8px;
   margin-top: 26px;

@@ -1,9 +1,57 @@
 import { clockLabel, escapeHtml } from './format.js';
 
+// Plain-text result for sharing on social media.
+function shareText(r) {
+  const lost = r.stats.find(([k]) => k === 'Nodes lost')[1];
+  const data = r.stats.find(([k]) => k === 'Data lost')[1];
+  return [
+    `VulturesGrid · ${r.huntName}`,
+    `Grade ${r.grade} (${r.score}/100) · ${r.outcome}`,
+    `Nodes lost: ${lost} · Data lost: ${data}`,
+    'We circle what is already rotten.',
+  ].join('\n');
+}
+
+// Clipboard API where allowed, falling back to a hidden textarea for older browsers.
+async function copy(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const area = document.createElement('textarea');
+    area.value = text;
+    area.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(area);
+    area.select();
+    const ok = document.execCommand('copy');
+    area.remove();
+    if (!ok) throw new Error('copy failed');
+  }
+}
+
 // End-of-round "Case File": a stamped investigative document with the grade.
 export function createCaseFile({ onReplay, onNewHunt }) {
   const dialog = document.getElementById('casefile');
   const body = dialog.querySelector('.cf-body');
+  let report = null;
+
+  // Native share sheet where available (phones), otherwise copy to the clipboard.
+  async function share(button) {
+    const url = `${location.origin}${location.pathname}`;
+    const text = shareText(report);
+    const original = button.textContent;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'VulturesGrid', text, url });
+        return;
+      }
+      await copy(`${text}\n${url}`);
+      button.textContent = 'Copied';
+    } catch (err) {
+      if (err?.name === 'AbortError') return; // share sheet dismissed
+      button.textContent = 'Copy failed';
+    }
+    setTimeout(() => (button.textContent = original), 2000);
+  }
 
   dialog.addEventListener('click', (e) => {
     if (e.target === dialog) dialog.close();
@@ -13,6 +61,7 @@ export function createCaseFile({ onReplay, onNewHunt }) {
       dialog.close();
       onReplay();
     }
+    if (action === 'share') share(e.target.closest('[data-cf]'));
     if (action === 'new') {
       dialog.close();
       onNewHunt();
@@ -20,6 +69,7 @@ export function createCaseFile({ onReplay, onNewHunt }) {
   });
 
   function show(r) {
+    report = r;
     const outcomeClass = r.outcome === 'CONTAINED' ? 'is-contained' : 'is-consumed';
     body.innerHTML = `
       <header class="cf-head">
@@ -73,6 +123,7 @@ export function createCaseFile({ onReplay, onNewHunt }) {
       <footer class="cf-actions">
         <button class="btn" data-cf="close">Close</button>
         <button class="btn" data-cf="new">New Hunt</button>
+        <button class="btn" data-cf="share">Share result</button>
         <button class="btn btn-ink" data-cf="replay">Replay round</button>
       </footer>`;
     dialog.showModal();

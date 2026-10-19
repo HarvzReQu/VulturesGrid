@@ -51,6 +51,7 @@ It is a visual game only. There is no real networking, scanning or security tool
   - time to first response, when the red was cleared, nodes lost and data lost
   - a timeline, a list of actions taken and an auto-written summary
 - **Replay:** after a round, scrub the timeline to any moment and watch it play back.
+- **Share result:** post your grade straight from the Case File, using the phone share sheet or a clipboard copy.
 - **Ambient sound** (off by default; speaker button or `M`): wind gusts, a low rumble, and distant wingbeats that come more often as the rot spreads. It's all generated live with the Web Audio API, with no audio files.
 - **Polish:**
   - a loading screen where the skull emblem fades in and the tagline types itself out

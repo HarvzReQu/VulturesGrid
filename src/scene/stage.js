@@ -3,10 +3,14 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { PALETTE } from './palette.js';
 import { glowTexture } from './textures.js';
 
+// Phones and low-core machines get a lighter setup: lower pixel ratio, smaller shadows, less dust.
+const lowPower =
+  window.matchMedia('(pointer: coarse)').matches || (navigator.hardwareConcurrency ?? 8) <= 4;
+
 // Renderer, camera, controls, lighting, ground and grid.
 export function createStage(container) {
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, lowPower ? 1.5 : 2));
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -34,7 +38,7 @@ export function createStage(container) {
   const moonLight = new THREE.DirectionalLight(PALETTE.moon, 2.4);
   moonLight.position.set(-24, 60, -18);
   moonLight.castShadow = true;
-  moonLight.shadow.mapSize.set(2048, 2048);
+  moonLight.shadow.mapSize.setScalar(lowPower ? 1024 : 2048);
   const s = moonLight.shadow.camera;
   s.left = s.bottom = -42;
   s.right = s.top = 42;
@@ -87,6 +91,7 @@ export function createStage(container) {
   window.addEventListener('resize', resize);
 
   return {
+    lowPower,
     renderer,
     scene,
     camera,
