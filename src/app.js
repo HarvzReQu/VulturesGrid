@@ -376,8 +376,9 @@ export function startApp(params) {
     select(focus.data.id);
   }
 
-  stage.renderer.setAnimationLoop(() => {
-    tick(Math.min(clock.getDelta(), 0.1));
+  // One rendered frame: advance by dt seconds, refresh the UI, draw.
+  function frame(dt) {
+    tick(dt);
     killChain.update(replay.active ? replay.chainView : endless.active ? endless.chainView : engine);
     huntPanel.update(engine, replay.active ? replay.playhead : null, endless.active ? endless.status() : null);
     timeline.update(replay.playhead, replay.playing, replay.active);
@@ -389,7 +390,15 @@ export function startApp(params) {
     tutorial.update();
     if (stage.controls.enabled) stage.controls.update();
     stage.render();
-  });
+  }
+
+  // Dev-only capture mode (?capture) for recording videos: no real-time loop; a recorder
+  // steps exact frames through window.__vg instead. Stripped from production builds.
+  if (import.meta.env.DEV && params.has('capture')) {
+    window.__vg = { frame, stage, engine, nodes, swoop, select, flyToNode, transport };
+  } else {
+    stage.renderer.setAnimationLoop(() => frame(Math.min(clock.getDelta(), 0.1)));
+  }
 
   return {
     showHelpIfFirstVisit: () => help.showIfFirstVisit(),

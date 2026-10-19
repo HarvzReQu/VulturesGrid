@@ -6,7 +6,8 @@ import { webglAvailable, showUnsupported } from './ui/unsupported.js';
 // the rest of the app download in parallel.
 const params = new URLSearchParams(location.search);
 // Deep links skip the intro. ?tutorial goes straight into the guided Training Hunt.
-const deepLinked = params.has('hunt') || params.has('focus') || params.has('tutorial');
+const deepLinked =
+  params.has('hunt') || params.has('focus') || params.has('tutorial') || (import.meta.env.DEV && params.has('capture'));
 
 if (!webglAvailable()) {
   document.getElementById('loading').remove();
